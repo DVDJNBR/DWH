@@ -1,0 +1,59 @@
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "username" {
+  description = "Username for resource naming (lowercase, no spaces)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.username))
+    error_message = "Username must contain only lowercase letters, numbers, and hyphens."
+  }
+}
+
+variable "location" {
+  description = "Azure region for resources"
+  type        = string
+  default     = "francecentral"
+}
+
+variable "eventhubs" {
+  description = "List of Event Hub names to create"
+  type        = list(string)
+  default     = ["orders", "clickstream"]
+}
+
+variable "sql_admin_login" {
+  description = "SQL Server administrator login"
+  type        = string
+}
+
+variable "sql_admin_password" {
+  description = "SQL Server administrator password"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.sql_admin_password) >= 8
+    error_message = "Password must be at least 8 characters long."
+  }
+}
+
+variable "dockerhub_username" {
+  description = "Docker Hub username"
+  type        = string
+}
+
+variable "dockerhub_token" {
+  description = "Docker Hub access token"
+  type        = string
+  sensitive   = true
+}
+
+variable "container_producers_image" {
+  description = "Docker image for event producers"
+  type        = string
+  default     = "davidbreau/data-generator:latest"
+}
