@@ -1,0 +1,28 @@
+# ============================================================================
+# Azure Configuration
+# ============================================================================
+
+subscription_id = "YOUR_AZURE_SUBSCRIPTION_ID"  # az account show --query id -o tsv
+username        = "your-username"                # Lowercase, no spaces (ex: john, marie)
+location        = "francecentral"                # or "westeurope", "northeurope"
+
+# ============================================================================
+# Event Hubs Configuration
+# ============================================================================
+
+eventhubs = ["orders", "clickstream"]
+
+# ============================================================================
+# SQL Database Configuration
+# ============================================================================
+
+sql_admin_login    = "sqladmin"
+sql_admin_password = "YOUR_SECURE_PASSWORD"  # Min 8 chars, uppercase, lowercase, number
+
+# ============================================================================
+# Docker Configuration
+# ============================================================================
+
+dockerhub_username        = "your-dockerhub-username"
+dockerhub_token           = "YOUR_DOCKERHUB_TOKEN"  # Create at https://hub.docker.com/settings/security
+container_producers_image = "your-dockerhub-username/data-generator:latest"
