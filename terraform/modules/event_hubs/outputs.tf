@@ -7,3 +7,7 @@ output "listen_connection_string" {
   value     = azurerm_eventhub_namespace_authorization_rule.listen_policy.primary_key
   sensitive = true
 }
+
+output "namespace_name" {
+  value = azurerm_eventhub_namespace.EH_namespace.name
+}
