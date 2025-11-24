@@ -1,0 +1,16 @@
+[project]
+name = "data-generator"
+version = "0.1.0"
+description = "Synthetic event generator for Azure Data Warehouse"
+authors = [
+    {name = "DVDJNBR", email = "d4v1dbr34u@gmail.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "azure-eventhub>=5.11.0",
+    "faker>=20.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
