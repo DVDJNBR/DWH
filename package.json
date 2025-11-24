@@ -1,0 +1,20 @@
+{
+  "name": "dwh-azure-terraform",
+  "version": "0.0.0-development",
+  "description": "Azure Data Warehouse with Terraform and synthetic data generation",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DVDJNBR/DWH.git"
+  },
+  "author": "DVDJNBR <d4v1dbr34u@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "semantic-release": "^22.0.12"
+  }
+}

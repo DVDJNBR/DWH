@@ -219,3 +219,15 @@ terraform.rc
 
 TEACHING_DWH_terraform/
 STEPS/
+
+# ==============================================================================
+#
+# NODE / NPM
+#
+# ==============================================================================
+
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
