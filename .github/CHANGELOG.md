@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/DVDJNBR/DWH/compare/v0.2.0...v0.3.0) (2025-11-25)
+
+
+### Features
+
+* add Makefile for easy Terraform management ([36a17e6](https://github.com/DVDJNBR/DWH/commit/36a17e610c7df8dc309a30885db1593d41ffa9f5))
+
 # [0.2.0](https://github.com/DVDJNBR/DWH/compare/v0.1.0...v0.2.0) (2025-11-24)
 
 
