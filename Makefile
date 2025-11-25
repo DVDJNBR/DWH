@@ -110,6 +110,21 @@ graph: ## Génère un graphe de dépendances (nécessite graphviz)
 	cd $(TERRAFORM_DIR) && terraform graph | dot -Tpng > terraform-graph.png
 	@echo "$(GREEN)✅ Graphe généré: $(TERRAFORM_DIR)/terraform-graph.png$(NC)"
 
+seed: ## Génère des données historiques dans le DWH
+	@echo "$(GREEN)📊 Génération de données historiques...$(NC)"
+	@echo "$(YELLOW)⚠️  Assurez-vous que l'infrastructure est déployée et .env configuré$(NC)"
+	@SERVER=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_server_fqdn 2>/dev/null) && \
+	DATABASE=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_database_name 2>/dev/null) && \
+	SQL_SERVER_FQDN=$$SERVER SQL_DATABASE_NAME=$$DATABASE \
+	uv run --directory scripts seed_historical_data.py
+
+seed-quick: ## Génère 7 jours de données (rapide)
+	@echo "$(GREEN)📊 Génération rapide (7 jours)...$(NC)"
+	@SERVER=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_server_fqdn 2>/dev/null) && \
+	DATABASE=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_database_name 2>/dev/null) && \
+	SQL_SERVER_FQDN=$$SERVER SQL_DATABASE_NAME=$$DATABASE \
+	uv run --directory scripts seed_historical_data.py --days 7 --orders-per-day 20 --clicks-per-day 200
+
 # Raccourcis
 i: init ## Alias pour init
 p: plan ## Alias pour plan
