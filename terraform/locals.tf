@@ -11,8 +11,24 @@ locals {
   # Tags communs pour toutes les ressources
   common_tags = {
     Project     = "DWH-Azure"
-    Environment = "Development"
+    Environment = var.environment == "prod" ? "Production" : "Development"
     ManagedBy   = "Terraform"
     Owner       = var.username
   }
+  
+  # ============================================================================
+  # Environment-specific configurations
+  # ============================================================================
+  
+  # SQL Database SKU based on environment
+  sql_sku = var.environment == "prod" ? "S3" : "S0"
+  
+  # Backup retention based on environment
+  backup_retention_days = var.environment == "prod" ? 7 : 1
+  
+  # Geo-replication based on environment
+  geo_backup_enabled = var.environment == "prod" ? true : false
+  
+  # Long-term retention based on environment and backup feature
+  enable_long_term_retention = var.environment == "prod" && var.enable_backup
 }
