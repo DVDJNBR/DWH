@@ -57,3 +57,36 @@ variable "container_producers_image" {
   type        = string
   default     = "davidbreau/data-generator:latest"
 }
+
+# ============================================================================
+# Environment and Features Configuration
+# ============================================================================
+
+variable "environment" {
+  description = "Environment (dev or prod)"
+  type        = string
+  default     = "dev"
+  
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "Environment must be 'dev' or 'prod'."
+  }
+}
+
+variable "enable_backup" {
+  description = "Enable backup and disaster recovery features"
+  type        = bool
+  default     = false
+}
+
+variable "enable_monitoring" {
+  description = "Enable monitoring and alerting features"
+  type        = bool
+  default     = false
+}
+
+variable "enable_security" {
+  description = "Enable advanced security features (RLS)"
+  type        = bool
+  default     = false
+}

@@ -30,3 +30,37 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# ============================================================================
+# Backup and Environment Configuration
+# ============================================================================
+
+variable "sql_sku" {
+  description = "SQL Database SKU (S0 for dev, S3 for prod)"
+  type        = string
+  default     = "S0"
+}
+
+variable "enable_backup" {
+  description = "Enable backup features"
+  type        = bool
+  default     = false
+}
+
+variable "backup_retention_days" {
+  description = "Number of days to retain backups"
+  type        = number
+  default     = 1
+}
+
+variable "geo_backup_enabled" {
+  description = "Enable geo-replication"
+  type        = bool
+  default     = false
+}
+
+variable "enable_long_term_retention" {
+  description = "Enable long-term retention policy"
+  type        = bool
+  default     = false
+}
