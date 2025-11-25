@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/DVDJNBR/DWH/compare/v0.3.0...v0.4.0) (2025-11-25)
+
+
+### Features
+
+* add historical data seeding script with .env support ([4c35904](https://github.com/DVDJNBR/DWH/commit/4c359045ae0b170d288dfd47b6bbaade55e5a98a))
+
 # [0.3.0](https://github.com/DVDJNBR/DWH/compare/v0.2.0...v0.3.0) (2025-11-25)
 
 
