@@ -100,6 +100,10 @@ seed-quick: ## Génère 7 jours de données (rapide)
 	SQL_SERVER_FQDN=$$SERVER SQL_DATABASE_NAME=$$DATABASE \
 	uv run --directory scripts seed_historical_data.py --days 7 --orders-per-day 20 --clicks-per-day 200
 
+test-backup: ## Teste le Point-in-Time Restore
+	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
+	@uv run --directory scripts python test_backup_restore.py
+
 # Raccourcis
 i: init ## Alias pour init
 p: plan ## Alias pour plan
