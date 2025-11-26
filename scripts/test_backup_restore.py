@@ -336,13 +336,13 @@ Base restaurée      : {restored_db_name}
 Table : fact_order
   État initial      : {orders_before} lignes
   Après incident    : {orders_after} lignes (-{orders_lost})
-  Après restauration: {orders_restored} lignes
+  Après restauration: {orders_restored} lignes ({'+' if orders_restored - orders_before > 0 else ''}{orders_restored - orders_before if orders_restored != orders_before else '±0'})
   Récupération      : {'✓ SUCCÈS' if orders_restored == orders_before else '✗ ÉCHEC'}
 
 Table : fact_clickstream
   État initial      : {clicks_before} lignes
   Après incident    : {clicks_after} lignes (-{clicks_lost})
-  Après restauration: {clicks_restored} lignes
+  Après restauration: {clicks_restored} lignes ({'+' if clicks_restored - clicks_before > 0 else ''}{clicks_restored - clicks_before if clicks_restored != clicks_before else '±0'})
   Récupération      : {'✓ SUCCÈS' if clicks_restored == clicks_before else '✗ ÉCHEC'}
 
 {'━' * 60}
