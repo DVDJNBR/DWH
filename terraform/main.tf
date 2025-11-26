@@ -38,6 +38,13 @@ module "sql_database" {
   sql_admin_password  = var.sql_admin_password
   schema_file_path    = "${path.root}/dwh_schema.sql"
   tags                = local.common_tags
+  
+  # Backup configuration
+  sql_sku                     = local.sql_sku
+  enable_backup               = var.enable_backup
+  backup_retention_days       = local.backup_retention_days
+  geo_backup_enabled          = local.geo_backup_enabled
+  enable_long_term_retention  = local.enable_long_term_retention
 }
 
 # ============================================================================
