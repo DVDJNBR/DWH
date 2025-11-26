@@ -1,3 +1,29 @@
+# [1.0.0](https://github.com/DVDJNBR/DWH/compare/v0.4.0...v1.0.0) (2025-11-26)
+
+
+* feat!: add production-ready disaster recovery ([1ad6f74](https://github.com/DVDJNBR/DWH/commit/1ad6f7477614a8dc36e523d3be64d03ede8a026c))
+
+
+### Features
+
+* add backup restore test script ([37bb29e](https://github.com/DVDJNBR/DWH/commit/37bb29ee758368010b81f8fb2aa7c48031962dca))
+* add disaster recovery with environment-based backup configuration ([82a0b80](https://github.com/DVDJNBR/DWH/commit/82a0b80fb7ed49f161ca853c73d0748b86fb02ae))
+
+
+### BREAKING CHANGES
+
+* Infrastructure now requires backup configuration
+
+This major release adds comprehensive disaster recovery capabilities:
+- Automated backup with configurable retention (dev/prod)
+- Point-in-Time Restore tested and validated
+- Geo-replication for regional failures
+- RTO: 4 hours / RPO: 1 hour
+- Environment-based configuration (dev/prod)
+
+The infrastructure is now production-ready with enterprise-grade
+backup and recovery features.
+
 # [0.4.0](https://github.com/DVDJNBR/DWH/compare/v0.3.0...v0.4.0) (2025-11-25)
 
 
