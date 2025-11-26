@@ -147,4 +147,8 @@ update-schema: ## Applique les migrations de schéma (marketplace)
 
 test-backup: ## Teste le Point-in-Time Restore
 	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
-	@uv run --directory scripts python test_backup_restore.py
+	@uv run --directory scripts python tests/test_backup_restore.py
+
+test-schema: ## Teste le nouveau schéma marketplace
+	@echo "$(GREEN)🧪 Test du schéma marketplace...$(NC)"
+	@uv run --directory scripts python tests/test_marketplace_schema.py
