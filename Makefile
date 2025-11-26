@@ -35,9 +35,17 @@ apply: ## Déploie l'infrastructure (avec confirmation)
 	@echo "$(GREEN)🚀 Déploiement de l'infrastructure...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply
 
-deploy: ## Déploie l'infrastructure (sans confirmation)
-	@echo "$(GREEN)🚀 Déploiement automatique...$(NC)"
+deploy: ## Déploie l'infrastructure de base (sans confirmation)
+	@echo "$(GREEN)🚀 Déploiement de l'infrastructure de base...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+
+apply-backup: ## Ajoute le backup à l'infrastructure existante (incremental)
+	@echo "$(GREEN)🛡️  Ajout du BACKUP à l'infrastructure existante (ENV=$(ENV))...$(NC)"
+	@echo "$(YELLOW)⚠️  Ceci modifie la base de données existante sans la recréer$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-target=module.sql_database \
+		-var="environment=$(ENV)" \
+		-var="enable_backup=true"
 
 destroy: ## Détruit l'infrastructure (avec confirmation)
 	@echo "$(RED)💥 Destruction de l'infrastructure...$(NC)"
@@ -131,3 +139,20 @@ p: plan ## Alias pour plan
 a: apply ## Alias pour apply
 d: deploy ## Alias pour deploy
 s: status ## Alias pour status
+
+update-schema: ## Applique les migrations de schéma (marketplace)
+	@echo "$(GREEN)🔄 Application des migrations de schéma...$(NC)"
+	@echo "$(YELLOW)⚠️  Ceci modifie le schéma de la base de données existante$(NC)"
+	@uv run --directory scripts python migrations/apply_migration.py 001
+
+test-base: ## Teste le schéma de base (après deploy)
+	@echo "$(GREEN)🧪 Test du schéma de base...$(NC)"
+	@uv run --directory scripts python tests/test_base_schema.py
+
+test-schema: ## Teste le nouveau schéma marketplace (après update-schema)
+	@echo "$(GREEN)🧪 Test du schéma marketplace...$(NC)"
+	@uv run --directory scripts python tests/test_marketplace_schema.py
+
+test-backup: ## Teste le Point-in-Time Restore
+	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
+	@uv run --directory scripts python tests/test_backup_restore.py
