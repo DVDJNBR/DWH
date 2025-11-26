@@ -145,10 +145,14 @@ update-schema: ## Applique les migrations de schéma (marketplace)
 	@echo "$(YELLOW)⚠️  Ceci modifie le schéma de la base de données existante$(NC)"
 	@uv run --directory scripts python migrations/apply_migration.py 001
 
+test-base: ## Teste le schéma de base (après deploy)
+	@echo "$(GREEN)🧪 Test du schéma de base...$(NC)"
+	@uv run --directory scripts python tests/test_base_schema.py
+
+test-schema: ## Teste le nouveau schéma marketplace (après update-schema)
+	@echo "$(GREEN)🧪 Test du schéma marketplace...$(NC)"
+	@uv run --directory scripts python tests/test_marketplace_schema.py
+
 test-backup: ## Teste le Point-in-Time Restore
 	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
 	@uv run --directory scripts python tests/test_backup_restore.py
-
-test-schema: ## Teste le nouveau schéma marketplace
-	@echo "$(GREEN)🧪 Test du schéma marketplace...$(NC)"
-	@uv run --directory scripts python tests/test_marketplace_schema.py
