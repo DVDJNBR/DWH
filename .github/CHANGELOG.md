@@ -1,3 +1,47 @@
+# [2.0.0](https://github.com/DVDJNBR/DWH/compare/v1.0.0...v2.0.0) (2025-11-26)
+
+
+* feat!: add marketplace schema with incremental migration ([0fe9fd3](https://github.com/DVDJNBR/DWH/commit/0fe9fd38f19586289730056c65b954480ab1e94e))
+
+
+### Features
+
+* add marketplace schema migration ([3debee8](https://github.com/DVDJNBR/DWH/commit/3debee82abe2cd498b9a06467c0ebb21bc98d487))
+
+
+### BREAKING CHANGES
+
+* Database schema extended with marketplace tables
+
+This major release adds multi-vendor marketplace support:
+
+Schema changes:
+- New dimension: dim_vendor with SCD Type 2 (historical tracking)
+- New facts: fact_vendor_performance, fact_stock
+- Modified: dim_product extended with vendor_id
+- Row-Level Security (RLS) for vendor data isolation
+
+Migration features:
+- Incremental deployment (no data loss)
+- Backward compatible (existing products linked to SHOPNOW)
+- Idempotent SQL migration script
+- Automated testing with before/after comparison
+
+Testing:
+- make test-base: validates base schema
+- make test-schema: validates marketplace schema with comparison
+- Detailed reports with data samples and structure
+
+Workflow:
+1. make deploy (base infrastructure)
+2. make seed (historical data)
+3. make apply-backup (add backup incrementally)
+4. make update-schema (add marketplace tables incrementally)
+5. make test-schema (validate changes)
+
+The infrastructure now supports multi-vendor marketplace with
+production-grade security and data isolation.
+
 # [1.0.0](https://github.com/DVDJNBR/DWH/compare/v0.4.0...v1.0.0) (2025-11-26)
 
 
