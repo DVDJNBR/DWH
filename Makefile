@@ -139,3 +139,12 @@ p: plan ## Alias pour plan
 a: apply ## Alias pour apply
 d: deploy ## Alias pour deploy
 s: status ## Alias pour status
+
+update-schema: ## Applique les migrations de schéma (marketplace)
+	@echo "$(GREEN)🔄 Application des migrations de schéma...$(NC)"
+	@echo "$(YELLOW)⚠️  Ceci modifie le schéma de la base de données existante$(NC)"
+	@uv run --directory scripts python migrations/apply_migration.py 001
+
+test-backup: ## Teste le Point-in-Time Restore
+	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
+	@uv run --directory scripts python test_backup_restore.py
