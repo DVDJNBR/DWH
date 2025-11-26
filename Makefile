@@ -35,9 +35,17 @@ apply: ## Déploie l'infrastructure (avec confirmation)
 	@echo "$(GREEN)🚀 Déploiement de l'infrastructure...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply
 
-deploy: ## Déploie l'infrastructure (sans confirmation)
-	@echo "$(GREEN)🚀 Déploiement automatique...$(NC)"
+deploy: ## Déploie l'infrastructure de base (sans confirmation)
+	@echo "$(GREEN)🚀 Déploiement de l'infrastructure de base...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+
+apply-backup: ## Ajoute le backup à l'infrastructure existante (incremental)
+	@echo "$(GREEN)🛡️  Ajout du BACKUP à l'infrastructure existante (ENV=$(ENV))...$(NC)"
+	@echo "$(YELLOW)⚠️  Ceci modifie la base de données existante sans la recréer$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-target=module.sql_database \
+		-var="environment=$(ENV)" \
+		-var="enable_backup=true"
 
 destroy: ## Détruit l'infrastructure (avec confirmation)
 	@echo "$(RED)💥 Destruction de l'infrastructure...$(NC)"
