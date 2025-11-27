@@ -202,9 +202,16 @@ make update-schema
 - Vendors can only access their own data
 - Disabled by default (enable manually when ready)
 
-**Sample data:**
-- Default vendor: SHOPNOW (internal)
-- 3 sample vendors for testing (TechStore Pro, Fashion Hub, Home & Garden Plus)
+**Generate sample vendors:**
+```bash
+make seed-vendors  # Creates 10 realistic vendors with Faker
+```
+
+This generates vendors with:
+- Realistic company names
+- Valid email addresses
+- Random categories (electronics, fashion, home, sports, etc.)
+- Commission rates between 10-25%
 
 **Test the schema:**
 ```bash
@@ -219,7 +226,58 @@ This validates:
 
 ---
 
-## 🔜 Phase 4: Data Quality (Planned)
+## 🌊 Phase 4: Vendor Streaming
+
+Enable real-time vendor event processing.
+
+```bash
+make stream-new-vendors
+```
+
+**What gets added:**
+
+**New Event Hub: `vendors`**
+- Dedicated stream for vendor events (creation, updates, status changes)
+- Integrated with existing Event Hub namespace
+
+**Stream Analytics updates:**
+- New input: `InputVendors`
+- New output: `OutputDimVendor`
+- Query extended to process vendor events in real-time
+
+**Event format:**
+```json
+{
+  "vendor_id": "TECHPRO",
+  "vendor_name": "TechPro Solutions",
+  "vendor_status": "active",
+  "vendor_category": "electronics",
+  "vendor_email": "contact@techpro.com",
+  "commission_rate": 15.5,
+  "timestamp": 1732704000
+}
+```
+
+**Test the streaming:**
+```bash
+make test-vendors-stream
+```
+
+This will:
+1. Verify vendors Event Hub exists
+2. Send a test vendor event
+3. Wait for Stream Analytics to process it
+4. Verify the vendor appears in `dim_vendor`
+5. Validate all fields are correct
+
+**Workflow:**
+```
+Vendor Event → Event Hub (vendors) → Stream Analytics → dim_vendor
+```
+
+---
+
+## 🔜 Phase 5: Data Quality (Planned)
 
 Add data validation and quarantine zone.
 
@@ -231,7 +289,7 @@ Add data validation and quarantine zone.
 
 ---
 
-## 🔜 Phase 5: Monitoring & Alerting (Planned)
+## 🔜 Phase 6: Monitoring & Alerting (Planned)
 
 Add observability and automated alerting.
 

@@ -18,7 +18,7 @@ module "event_hubs" {
   resource_group_name     = azurerm_resource_group.main.name
   location                = azurerm_resource_group.main.location
   eventhub_namespace_name = "eh-${local.unique_name}"
-  eventhubs               = var.eventhubs
+  eventhubs               = local.eventhubs
   tags                    = local.common_tags
 }
 
@@ -64,6 +64,7 @@ module "stream_analytics" {
   sql_database_name       = module.sql_database.database_name
   sql_admin_login         = var.sql_admin_login
   sql_admin_password      = var.sql_admin_password
+  enable_marketplace      = var.enable_marketplace
   tags                    = local.common_tags
 }
 
