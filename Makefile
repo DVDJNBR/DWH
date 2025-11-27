@@ -39,8 +39,8 @@ deploy: ## Déploie l'infrastructure de base (sans confirmation)
 	@echo "$(GREEN)🚀 Déploiement de l'infrastructure de base...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
 
-apply-backup: ## Ajoute le backup à l'infrastructure existante (incremental)
-	@echo "$(GREEN)🛡️  Ajout du BACKUP à l'infrastructure existante (ENV=$(ENV))...$(NC)"
+recovery-setup: ## Configure le backup et disaster recovery (incremental)
+	@echo "$(GREEN)🛡️  Configuration du backup et disaster recovery (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  Ceci modifie la base de données existante sans la recréer$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
 		-target=module.sql_database \
