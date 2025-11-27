@@ -37,6 +37,28 @@ This project is part of a **professional certification program** (E6 - Améliore
 - [Docker Hub](https://hub.docker.com/) account
 - [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
 
+### Environment Configuration
+
+The project supports two environments:
+
+**`ENV=dev` (default)** - Development environment
+- Minimal resources to reduce costs
+- SQL Database: S0 (10 DTU)
+- Backup retention: 1 day
+- No geo-replication
+- No long-term retention
+- **Cost**: ~123€/month
+
+**`ENV=prod`** - Production environment
+- Production-grade resources
+- SQL Database: S3 (100 DTU)
+- Backup retention: 7 days
+- Geo-replication enabled
+- Long-term retention: 4W/12M/5Y
+- **Cost**: ~315€/month
+
+💡 **Tip**: Use `dev` for testing and learning, `prod` for realistic production scenarios.
+
 ### Initial Setup
 
 ```bash
@@ -263,30 +285,34 @@ ORDER BY revenue DESC;
 make help              # Show all available commands
 make init              # Initialize Terraform
 make plan              # Show deployment plan
-make deploy            # Deploy base infrastructure
-make apply-backup      # Add backup to existing infrastructure (incremental)
+make deploy            # Deploy base infrastructure (ENV=dev by default)
+make recovery-setup    # Configure backup & disaster recovery (incremental)
 make update-schema     # Add marketplace tables (incremental)
 make status            # Check resources status
 make seed              # Generate historical data (30 days)
 make seed-quick        # Generate historical data (7 days)
-make test-backup       # Test Point-in-Time Restore
+make test-base         # Test base schema
 make test-schema       # Test marketplace schema
+make test-backup       # Test Point-in-Time Restore
 make destroy           # Destroy infrastructure
 ```
 
 **Environment examples:**
 ```bash
-make deploy ENV=dev              # Development (default, minimal costs)
-make apply-backup ENV=prod       # Production (full features)
+make deploy                    # Development (default)
+make deploy ENV=prod           # Production
+
+make recovery-setup            # Backup in dev (default)
+make recovery-setup ENV=prod   # Backup in prod (full features)
 ```
 
 **Incremental workflow:**
 ```bash
-make deploy           # 1. Base infrastructure
-make seed             # 2. Historical data
-make apply-backup     # 3. Add backup (without redeploying)
-make update-schema    # 4. Add marketplace tables (without redeploying)
-make test-schema      # 5. Validate changes
+make deploy              # 1. Base infrastructure (dev by default)
+make seed                # 2. Historical data
+make recovery-setup      # 3. Add backup (without redeploying)
+make update-schema       # 4. Add marketplace tables (without redeploying)
+make test-schema         # 5. Validate changes
 ```
 
 ---
