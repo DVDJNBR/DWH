@@ -14,8 +14,35 @@ resource "azurerm_mssql_database" "dwh" {
   collation      = "SQL_Latin1_General_CP1_CI_AS"
   license_type   = "LicenseIncluded"
   max_size_gb    = 2
-  sku_name       = "S0"
+  sku_name       = var.sql_sku
   zone_redundant = false
+  
+  # ============================================================================
+  # BACKUP CONFIGURATION (activated with enable_backup variable)
+  # ============================================================================
+  
+  # Short-term backup (Point-in-time restore)
+  dynamic "short_term_retention_policy" {
+    for_each = var.enable_backup ? [1] : []
+    content {
+      retention_days           = var.backup_retention_days
+      backup_interval_in_hours = 24
+    }
+  }
+  
+  # Long-term backup (Archival)
+  dynamic "long_term_retention_policy" {
+    for_each = var.enable_long_term_retention ? [1] : []
+    content {
+      weekly_retention  = "P4W"   # 4 weeks
+      monthly_retention = "P12M"  # 12 months
+      yearly_retention  = "P5Y"   # 5 years
+      week_of_year      = 1
+    }
+  }
+  
+  # Geo-replication for disaster recovery
+  geo_backup_enabled = var.geo_backup_enabled
 }
 
 resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
