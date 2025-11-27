@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/DVDJNBR/DWH/compare/v2.0.1...v2.0.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* add ENV=dev default variable in Makefile ([533ecf1](https://github.com/DVDJNBR/DWH/commit/533ecf1832d3cdda8bf3e4dbdf98c9978be46c7a))
+
 ## [2.0.1](https://github.com/DVDJNBR/DWH/compare/v2.0.0...v2.0.1) (2025-11-27)
 
 
