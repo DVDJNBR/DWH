@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/DVDJNBR/DWH/compare/v2.0.3...v2.0.4) (2025-11-27)
+
+
+### Bug Fixes
+
+* correct terraform path in test_backup_restore.py ([63c5565](https://github.com/DVDJNBR/DWH/commit/63c556505f6eaaccdf4bc2b089dc927ed83d8d5c))
+
 ## [2.0.3](https://github.com/DVDJNBR/DWH/compare/v2.0.2...v2.0.3) (2025-11-27)
 
 
