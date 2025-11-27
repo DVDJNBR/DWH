@@ -1,3 +1,16 @@
+# [2.1.0-beta.1](https://github.com/DVDJNBR/DWH/compare/v2.0.4...v2.1.0-beta.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* add missing CYAN color in test_marketplace_schema.py ([6d7e4cb](https://github.com/DVDJNBR/DWH/commit/6d7e4cb28d2dd10dc017524e6f3b3ef3f4db5735))
+
+
+### Features
+
+* add seed_vendors.py with Faker for realistic vendor data ([4277477](https://github.com/DVDJNBR/DWH/commit/4277477d6311eb594fb91b088c131ae2a957bb8a))
+* merge FT/STREAM_NEW_VENDORS into DEV ([0ea41a9](https://github.com/DVDJNBR/DWH/commit/0ea41a973d6c0be2568ea0d6d90fdfca7a3264a2))
+
 ## [2.0.4](https://github.com/DVDJNBR/DWH/compare/v2.0.3...v2.0.4) (2025-11-27)
 
 
