@@ -118,7 +118,7 @@ def main():
     print_header("TEST BACKUP & RESTORE - Azure SQL Database")
     
     # Charger les variables d'environnement
-    env_path = Path(__file__).parent.parent / '.env'
+    env_path = Path(__file__).parent.parent.parent / '.env'
     if not env_path.exists():
         print_error("Fichier .env non trouvé")
         sys.exit(1)
