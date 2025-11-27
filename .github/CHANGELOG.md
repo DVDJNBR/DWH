@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/DVDJNBR/DWH/compare/v2.0.0...v2.0.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* rename apply-backup to recovery-setup and clarify ENV defaults ([c596b6d](https://github.com/DVDJNBR/DWH/commit/c596b6d0c1ecc2a390abd1bc3ad7b1bf47c7a427))
+
 # [2.0.0](https://github.com/DVDJNBR/DWH/compare/v1.0.0...v2.0.0) (2025-11-26)
 
 
