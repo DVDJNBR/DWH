@@ -17,10 +17,15 @@ resource "azurerm_container_group" "producers" {
 
 
     environment_variables = {
-      EVENTHUB_CONNECTION_STR = var.connection_string
-      ORDERS_INTERVAL         = 60
-      PRODUCTS_INTERVAL       = 120
-      CLICKSTREAM_INTERVAL    = 2
+      EVENTHUB_CONNECTION_STR      = var.connection_string
+      ORDERS_INTERVAL              = 60
+      PRODUCTS_INTERVAL            = 120
+      CLICKSTREAM_INTERVAL         = 2
+      MARKETPLACE_ORDERS_INTERVAL  = 90
+      SQL_SERVER_FQDN              = var.sql_server_fqdn
+      SQL_DATABASE_NAME            = var.sql_database_name
+      SQL_ADMIN_LOGIN              = var.sql_admin_login
+      SQL_ADMIN_PASSWORD           = var.sql_admin_password
     }
 
   }

@@ -83,5 +83,9 @@ module "container_producers" {
   connection_string     = module.event_hubs.send_connection_string
   dockerhub_username    = var.dockerhub_username
   dockerhub_token       = var.dockerhub_token
+  sql_server_fqdn       = module.sql_database.server_fqdn
+  sql_database_name     = module.sql_database.database_name
+  sql_admin_login       = var.sql_admin_login
+  sql_admin_password    = var.sql_admin_password
   tags                  = local.common_tags
 }

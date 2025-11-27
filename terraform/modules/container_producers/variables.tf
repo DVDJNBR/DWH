@@ -47,3 +47,24 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "sql_server_fqdn" {
+  description = "SQL Server FQDN for marketplace producer"
+  type        = string
+}
+
+variable "sql_database_name" {
+  description = "SQL Database name for marketplace producer"
+  type        = string
+}
+
+variable "sql_admin_login" {
+  description = "SQL admin login for marketplace producer"
+  type        = string
+}
+
+variable "sql_admin_password" {
+  description = "SQL admin password for marketplace producer"
+  type        = string
+  sensitive   = true
+}
