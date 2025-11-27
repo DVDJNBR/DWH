@@ -157,3 +157,7 @@ test-schema: ## Teste le nouveau schéma marketplace (après update-schema)
 test-backup: ## Teste le Point-in-Time Restore
 	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
 	@uv run --directory scripts python tests/test_backup_restore.py
+
+seed-vendors: ## Génère des vendeurs réalistes avec Faker
+	@echo "$(GREEN)🏪 Génération de vendeurs avec Faker...$(NC)"
+	@uv run --directory scripts python seed_vendors.py --count 10
