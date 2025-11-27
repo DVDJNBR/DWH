@@ -169,8 +169,15 @@ seed-vendors: ## Génère des vendeurs réalistes avec Faker
 stream-new-vendors: ## Active le streaming des événements vendors (incremental)
 	@echo "$(GREEN)🌊 Activation du streaming vendors (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  Ceci ajoute la source vendors au Stream Analytics existant$(NC)"
+	@echo "$(YELLOW)⏸️  Arrêt du Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) 2>/dev/null || true
+	@echo "$(YELLOW)⏳ Attente de 10 secondes...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)🔧 Application des changements Terraform...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
 		-target=module.event_hubs \
 		-target=module.stream_analytics \
 		-var="environment=$(ENV)" \
 		-var="enable_marketplace=true"
+	@echo "$(GREEN)▶️  Redémarrage du Stream Analytics job...$(NC)"
+	az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) --output-start-mode JobStartTime

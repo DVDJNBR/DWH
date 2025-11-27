@@ -34,12 +34,13 @@ locals {
     CROSS APPLY GetArrayElements(o.items) AS i
 
   
-    /* 2. Orders -> dim_product */
+    /* 2. Orders -> dim_product (with vendor_id fallback) */
   
     SELECT
         i.ArrayValue.product_id,
         i.ArrayValue.name,
-        i.ArrayValue.category
+        i.ArrayValue.category,
+        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
     INTO
         [OutputDimProduct]
     FROM
@@ -94,12 +95,13 @@ QUERY
     CROSS APPLY GetArrayElements(o.items) AS i
 
   
-    /* 2. Orders -> dim_product */
+    /* 2. Orders -> dim_product (with vendor_id fallback) */
   
     SELECT
         i.ArrayValue.product_id,
         i.ArrayValue.name,
-        i.ArrayValue.category
+        i.ArrayValue.category,
+        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
     INTO
         [OutputDimProduct]
     FROM
