@@ -35,3 +35,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_marketplace" {
+  description = "Enable marketplace features (vendors streaming)"
+  type        = bool
+  default     = false
+}

@@ -158,6 +158,19 @@ test-backup: ## Teste le Point-in-Time Restore
 	@echo "$(GREEN)🧪 Test de backup et restauration...$(NC)"
 	@uv run --directory scripts python tests/test_backup_restore.py
 
+test-vendors-stream: ## Teste le streaming des événements vendors
+	@echo "$(GREEN)🧪 Test du streaming vendors...$(NC)"
+	@uv run --directory scripts python tests/test_vendors_stream.py
+
 seed-vendors: ## Génère des vendeurs réalistes avec Faker
 	@echo "$(GREEN)🏪 Génération de vendeurs avec Faker...$(NC)"
 	@uv run --directory scripts python seed_vendors.py --count 10
+
+stream-new-vendors: ## Active le streaming des événements vendors (incremental)
+	@echo "$(GREEN)🌊 Activation du streaming vendors (ENV=$(ENV))...$(NC)"
+	@echo "$(YELLOW)⚠️  Ceci ajoute la source vendors au Stream Analytics existant$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-target=module.event_hubs \
+		-target=module.stream_analytics \
+		-var="environment=$(ENV)" \
+		-var="enable_marketplace=true"

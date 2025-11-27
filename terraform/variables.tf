@@ -90,3 +90,9 @@ variable "enable_security" {
   type        = bool
   default     = false
 }
+
+variable "enable_marketplace" {
+  description = "Enable marketplace features (vendors streaming)"
+  type        = bool
+  default     = false
+}
