@@ -4,6 +4,7 @@
 TERRAFORM_DIR := terraform
 RESOURCE_GROUP := rg-e6-dbreau
 STREAM_JOB := asa-shopnow
+ENV ?= dev
 
 # Colors for output
 GREEN := \033[0;32m
