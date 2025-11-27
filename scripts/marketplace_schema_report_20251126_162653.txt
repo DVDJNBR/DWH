@@ -1,0 +1,38 @@
+======================================================================
+  MARKETPLACE SCHEMA REPORT
+======================================================================
+
+Date: 2025-11-26 16:26:53.502699
+Server: sql-dbreau-smart-sole.database.windows.net
+Database: dwh-shopnow
+
+======================================================================
+
+
+NEW TABLES (🆕 Marketplace)
+----------------------------------------------------------------------
+✓ 🆕 dim_vendor: 4 rows
+
+  Sample data from dim_vendor:
+  vendor_key | vendor_id | vendor_name      | vendor_status | vendor_category | vendor_email           | vendor_phone | commission_rate | valid_from                 | valid_to | is_current | created_at                 | updated_at                
+  -----------+-----------+------------------+---------------+-----------------+------------------------+--------------+-----------------+----------------------------+----------+------------+----------------------------+---------------------------
+  1          | SHOPNOW   | ShopNow Internal | active        | internal        | internal@shopnow.com   | None         | 0.00            | 2025-11-26 15:14:45.180000 | None     | True       | 2025-11-26 15:14:45.180000 | 2025-11-26 15:14:45.180000
+  2          | V001      | TechStore Pro    | active        | electronics     | contact@techstore.com  | None         | 15.00           | 2025-11-26 15:14:45.913333 | None     | True       | 2025-11-26 15:14:45.913333 | 2025-11-26 15:14:45.913333
+  3          | V002      | Fashion Hub      | active        | fashion         | contact@fashionhub.com | None         | 20.00           | 2025-11-26 15:14:45.933333 | None     | True       | 2025-11-26 15:14:45.933333 | 2025-11-26 15:14:45.933333
+
+✓ 🆕 fact_vendor_performance: 0 rows
+✓ 🆕 fact_stock: 0 rows
+
+
+======================================================================
+SUMMARY
+======================================================================
+
+Total tests: 20
+Passed: 20
+Failed: 0
+Success rate: 100.0%
+
+🆕 New tables added: 3 (dim_vendor, fact_vendor_performance, fact_stock)
+🔧 Modified tables: 1 (dim_product + vendor_id)
+🔒 Security: Row-Level Security configured
