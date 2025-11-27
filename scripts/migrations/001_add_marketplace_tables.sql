@@ -59,41 +59,12 @@ END
 GO
 
 -- ============================================================================
--- 2. Insert default vendor (ShopNow internal)
+-- 2. Sample vendors can be created using Faker
 -- ============================================================================
 
-PRINT 'Inserting default vendor (ShopNow)...';
-GO
-
-IF NOT EXISTS (SELECT * FROM dim_vendor WHERE vendor_id = 'SHOPNOW')
-BEGIN
-    INSERT INTO dim_vendor (
-        vendor_id, 
-        vendor_name, 
-        vendor_status, 
-        vendor_category,
-        vendor_email,
-        commission_rate,
-        valid_from,
-        is_current
-    )
-    VALUES (
-        'SHOPNOW',
-        'ShopNow Internal',
-        'active',
-        'internal',
-        'internal@shopnow.com',
-        0.00,
-        GETDATE(),
-        1
-    );
-    
-    PRINT '✓ Default vendor created';
-END
-ELSE
-BEGIN
-    PRINT '⚠ Default vendor already exists, skipping';
-END
+-- Sample vendors can be created using: make seed-vendors
+-- This will generate realistic vendor data using Faker
+PRINT '💡 To create sample vendors: make seed-vendors';
 GO
 
 -- ============================================================================
