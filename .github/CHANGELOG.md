@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/DVDJNBR/DWH/compare/v2.0.4...v2.0.5) (2025-11-27)
+
+
+### Bug Fixes
+
+* add missing CYAN color in test_marketplace_schema.py ([6d7e4cb](https://github.com/DVDJNBR/DWH/commit/6d7e4cb28d2dd10dc017524e6f3b3ef3f4db5735))
+
 ## [2.0.4](https://github.com/DVDJNBR/DWH/compare/v2.0.3...v2.0.4) (2025-11-27)
 
 
