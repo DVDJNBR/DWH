@@ -67,8 +67,8 @@ def print_info(text):
 def get_terraform_output(key):
     """Récupère une valeur depuis Terraform output"""
     try:
-        # Le script est dans scripts/, donc terraform est dans ../terraform
-        terraform_dir = Path(__file__).parent.parent / "terraform"
+        # Le script est dans scripts/tests/, donc terraform est dans ../../terraform
+        terraform_dir = Path(__file__).parent.parent.parent / "terraform"
         result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
         return result.strip()
     except sh.ErrorReturnCode as e:
