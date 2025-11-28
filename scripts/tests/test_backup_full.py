@@ -308,7 +308,7 @@ def main():
     print_header("RAPPORT FINAL")
     
     # Générer le rapport (overwrite previous)
-    report_file = Path(__file__).parent / "backup_restore_report.txt"
+    report_file = Path(__file__).parent / "backup_full_report.txt"
     
     success = (orders_restored == orders_before and clicks_restored == clicks_before)
     
