@@ -108,9 +108,14 @@ test-schema: ## Test marketplace schema (after update-schema)
 	@echo "$(GREEN)🧪 Testing marketplace schema...$(NC)"
 	@uv run --directory scripts python tests/test_marketplace_schema.py
 
-test-backup: ## Test Point-in-Time Restore
-	@echo "$(GREEN)🧪 Testing backup and restore...$(NC)"
-	@uv run --directory scripts python tests/test_backup_restore.py
+test-backup: ## Test backup configuration (quick)
+	@echo "$(GREEN)🧪 Testing backup configuration...$(NC)"
+	@uv run --directory scripts python tests/test_backup_quick.py
+
+test-backup-full: ## Test Point-in-Time Restore (slow, full restore)
+	@echo "$(GREEN)🧪 Testing full backup and restore...$(NC)"
+	@echo "$(YELLOW)⚠️  This will take 5-10 minutes (full database restore)$(NC)"
+	@uv run --directory scripts python tests/test_backup_full.py
 
 test-vendors-stream: ## Test vendor events streaming
 	@echo "$(GREEN)🧪 Testing vendor streaming...$(NC)"
