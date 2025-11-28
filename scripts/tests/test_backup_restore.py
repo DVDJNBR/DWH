@@ -307,8 +307,8 @@ def main():
     
     print_header("RAPPORT FINAL")
     
-    # Générer le rapport
-    report_file = f"backup_restore_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    # Générer le rapport (overwrite previous)
+    report_file = Path(__file__).parent / "backup_restore_report.txt"
     
     success = (orders_restored == orders_before and clicks_restored == clicks_before)
     
