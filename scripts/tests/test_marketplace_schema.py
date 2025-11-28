@@ -133,8 +133,8 @@ def main():
     report_lines.append("\n" + "=" * 70)
     
     # Check if base report exists for comparison
-    base_reports = sorted(Path('.').glob('base_schema_report_*.txt'))
-    has_base_report = len(base_reports) > 0
+    base_report_path = Path(__file__).parent / 'base_schema_report.txt'
+    has_base_report = base_report_path.exists()
     if has_base_report:
         report_lines.append(f"\n🔍 Comparing with base report: {base_reports[-1].name}")
         print(f"{Colors.CYAN}🔍 Found base report for comparison{Colors.NC}\n")
@@ -433,8 +433,8 @@ Success rate: {success_rate:.1f}%
         report_lines.append("  - Security schema and predicate function created")
         report_lines.append("  - VendorAccessPolicy created (disabled by default)")
     
-    # Save report
-    report_file = f"marketplace_schema_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    # Save report (overwrite previous)
+    report_file = Path(__file__).parent / "marketplace_schema_report.txt"
     with open(report_file, 'w') as f:
         f.write('\n'.join(report_lines))
     
