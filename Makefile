@@ -44,19 +44,19 @@ status: ## Show Azure resources status
 
 ##@ Deployment Workflow
 
-deploy: ## [1] Deploy base infrastructure
-	@echo "$(GREEN)🚀 Deploying base infrastructure...$(NC)"
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+deploy: ## [1] Deploy base infrastructure (ENV=dev by default)
+	@echo "$(GREEN)🚀 Deploying base infrastructure (ENV=$(ENV))...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve -var="environment=$(ENV)"
 
-seed: ## [2] Generate historical data in DWH
-	@echo "$(GREEN)📊 Generating historical data...$(NC)"
+seed: ## [2] Generate historical data (ENV=dev: 7 days, ENV=prod: 30 days)
+	@echo "$(GREEN)📊 Generating historical data (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  Make sure infrastructure is deployed and .env configured$(NC)"
 	@SERVER=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_server_fqdn 2>/dev/null) && \
 	DATABASE=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_database_name 2>/dev/null) && \
 	SQL_SERVER_FQDN=$$SERVER SQL_DATABASE_NAME=$$DATABASE \
-	uv run --directory scripts seed_historical_data.py
+	uv run --directory scripts seed_historical_data.py $(if $(filter prod,$(ENV)),,--days 7 --orders-per-day 20 --clicks-per-day 200)
 
-recovery-setup: ## [3] Configure backup and disaster recovery
+recovery-setup: ## [3] Backup & disaster recovery (ENV=dev: 1 day, ENV=prod: 7 days + geo)
 	@echo "$(GREEN)🛡️  Configuring backup and disaster recovery (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  This modifies the existing database without recreating it$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
@@ -69,34 +69,35 @@ update-schema: ## [4] Apply schema migrations (marketplace)
 	@echo "$(YELLOW)⚠️  This modifies the existing database schema$(NC)"
 	@uv run --directory scripts python migrations/apply_migration.py 001
 
-seed-vendors: ## [5] Generate realistic vendors with Faker
+update-stream: ## [5] Replace base stream with marketplace stream
+	@echo "$(GREEN)🌊 Replacing Stream Analytics with marketplace version...$(NC)"
+	@echo "$(YELLOW)⚠️  This destroys 'asa-shopnow' and creates 'asa-shopnow-marketplace'$(NC)"
+	@echo "$(YELLOW)⏸️  Stopping existing Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) 2>/dev/null || true
+	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)🔧 Applying Terraform with enable_marketplace=true...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve -var="enable_marketplace=true"
+	@echo "$(GREEN)✅ Stream Analytics marketplace deployed!$(NC)"
+
+seed-vendors: ## [6] Generate realistic vendors with Faker
 	@echo "$(GREEN)🏪 Generating vendors with Faker...$(NC)"
 	@uv run --directory scripts python seed_vendors.py --count 10
 
-stream-new-vendors: ## [6] Enable vendor events streaming
+stream-new-vendors: ## [7] Enable vendor events streaming (requires ENV)
 	@echo "$(GREEN)🌊 Enabling vendor streaming (ENV=$(ENV))...$(NC)"
-	@echo "$(YELLOW)⚠️  This adds vendor source to existing Stream Analytics$(NC)"
+	@echo "$(YELLOW)⚠️  This adds vendor Event Hub and activates marketplace producer$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
-	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) 2>/dev/null || true
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
 	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
 	@sleep 10
 	@echo "$(GREEN)🔧 Applying Terraform changes...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
 		-target=module.event_hubs \
-		-target=module.stream_analytics \
+		-target=module.container_producers \
 		-var="environment=$(ENV)" \
 		-var="enable_marketplace=true"
-	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
-	az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) --output-start-mode JobStartTime
-
-##@ Data Management
-
-seed-quick: ## Generate 7 days of data (quick)
-	@echo "$(GREEN)📊 Quick generation (7 days)...$(NC)"
-	@SERVER=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_server_fqdn 2>/dev/null) && \
-	DATABASE=$$(cd $(TERRAFORM_DIR) && terraform output -raw sql_database_name 2>/dev/null) && \
-	SQL_SERVER_FQDN=$$SERVER SQL_DATABASE_NAME=$$DATABASE \
-	uv run --directory scripts seed_historical_data.py --days 7 --orders-per-day 20 --clicks-per-day 200
+	@echo "$(GREEN)✅ Marketplace streaming enabled!$(NC)"
 
 ##@ Testing
 

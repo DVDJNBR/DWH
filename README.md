@@ -4,9 +4,88 @@
 [![Azure](https://img.shields.io/badge/Azure-Cloud-blue)](https://azure.microsoft.com)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform-purple)](https://www.terraform.io/)
 
-Real-time Data Warehouse for e-commerce analytics, deployed on Azure with Terraform.
+Real-time Data Warehouse for e-commerce analytics with multi-vendor marketplace support, deployed on Azure with Terraform.
 
-## 📋 Context
+---
+
+## 🚀 Quick Start
+
+**Prerequisites:** [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli), [Terraform](https://www.terraform.io/downloads) >= 1.0, [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
+
+**Setup:**
+```bash
+git clone https://github.com/DVDJNBR/DWH.git && cd DWH
+cp .env.example .env  # Edit with your Azure credentials
+az login && az account set --subscription "YOUR_SUBSCRIPTION_ID"
+```
+
+**Environment:** Use `ENV=dev` (default, 7-day data, 1-day backup) or `ENV=prod` (30-day data, 7-day backup + geo-replication) on deployment commands.
+
+---
+
+## 🛠️ Deployment Workflow
+
+**Deploy base infrastructure**
+Event Hubs, Stream Analytics, SQL Database, event producers
+```bash
+make deploy
+```
+<sub>Note: adding `ENV=prod` deploys S3 database instead of S0</sub>
+
+**Generate historical data**
+Populate warehouse with realistic orders and clickstream events
+```bash
+make seed
+```
+<sub>Note: adding `ENV=prod` generates 30 days of data instead of 7</sub>
+- `make test-base` to test base schema
+
+**Configure backup & disaster recovery**
+Point-in-Time Restore with automated backups
+```bash
+make recovery-setup
+```
+<sub>Note: adding `ENV=prod` enables 7-day retention + geo-replication instead of 1 day</sub>
+- `make test-backup` to test Point-in-Time Restore
+
+**Add marketplace schema**
+Adds `dim_vendor`, modifies `fact_order` and `dim_product` with `vendor_id`
+```bash
+make update-schema
+```
+- `make test-schema` to test marketplace schema
+
+**Replace Stream Analytics**
+Destroys `asa-shopnow`, creates `asa-shopnow-marketplace` with multi-vendor support
+```bash
+make update-stream
+```
+
+**Generate realistic vendors**
+Creates 10 vendors with Faker (14 total with migration defaults)
+```bash
+make seed-vendors
+```
+
+**Enable marketplace streaming**
+Adds vendors Event Hub and activates marketplace producer
+```bash
+make stream-new-vendors
+```
+- `make test-vendors-stream` to test vendor event processing
+
+---
+
+**Other useful commands:**
+```bash
+make help     # Show all available commands
+make status   # Check Azure resources status
+make destroy  # Destroy all infrastructure
+```
+
+---
+
+## 📋 Project Context
 
 This project is part of a **professional certification program** (E6 - Améliorer, monitorer et maintenir un Data Warehouse). The objective is to **improve, monitor, and maintain** an existing Data Warehouse in a changing business context.
 
@@ -28,68 +107,13 @@ This project is part of a **professional certification program** (E6 - Améliore
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-- [Terraform](https://www.terraform.io/downloads) >= 1.0
-- [Docker Hub](https://hub.docker.com/) account
-- [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
-
-### Environment Configuration
-
-The project supports two environments:
-
-**`ENV=dev` (default)** - Development environment
-- Minimal resources to reduce costs
-- SQL Database: S0 (10 DTU)
-- Backup retention: 1 day
-- No geo-replication
-- No long-term retention
-- **Cost**: ~123€/month
-
-**`ENV=prod`** - Production environment
-- Production-grade resources
-- SQL Database: S3 (100 DTU)
-- Backup retention: 7 days
-- Geo-replication enabled
-- Long-term retention: 4W/12M/5Y
-- **Cost**: ~315€/month
-
-💡 **Tip**: Use `dev` for testing and learning, `prod` for realistic production scenarios.
-
-### Initial Setup
-
-```bash
-# Clone repository
-git clone https://github.com/DVDJNBR/DWH.git
-cd DWH
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your Azure credentials
-
-# Login to Azure
-az login
-az account set --subscription "YOUR_SUBSCRIPTION_ID"
-```
-
----
-
 ## 📦 Phase 1: Base Infrastructure
 
 Deploy the initial Data Warehouse with real-time data pipeline.
 
 ```bash
-make deploy ENV=dev
+make deploy  # ENV=dev by default
 ```
-
-**Environment configuration:**
-- `ENV=dev` (default): Minimal resources to reduce costs (S0 database, 1-day retention)
-- `ENV=prod`: Production-grade resources (S3 database, 7-day retention, geo-backup)
-
-💡 Use `dev` for testing and learning, `prod` for realistic production scenarios.
 
 **What gets deployed:**
 
@@ -127,28 +151,21 @@ make status
 Add production-grade backup and disaster recovery capabilities.
 
 ```bash
-make deploy-backup ENV=prod
+make recovery-setup  # ENV=dev by default
 ```
 
 **What gets added:**
 
 **Short-term backup:**
 - Automated daily backups
-- 7 days retention (prod) / 1 day (dev)
 - Point-in-Time Restore: restore to any moment in the retention period
+- Retention: 1 day (dev) / 7 days (prod)
 
-**Long-term backup (prod only):**
+**Long-term backup (ENV=prod only):**
 - Weekly retention: 4 weeks
 - Monthly retention: 12 months
 - Yearly retention: 5 years
-
-**Geo-replication (prod only):**
-- Backup copy in secondary Azure region
-- Protection against regional failures
-
-**Recovery objectives:**
-- **RTO** (Recovery Time Objective): 4 hours
-- **RPO** (Recovery Point Objective): 1 hour
+- Geo-replication: backup copy in secondary Azure region
 
 **Test the backup:**
 ```bash
@@ -174,7 +191,7 @@ az sql db restore \
 
 ---
 
-## 📦 Phase 3: Marketplace Schema
+## 📦 Phase 3: Marketplace Schema Migration
 
 Extend the Data Warehouse to support multi-vendor marketplace.
 
@@ -188,6 +205,7 @@ make update-schema
 - Vendor information with SCD Type 2 (historical tracking)
 - Fields: vendor_id, name, status, category, commission_rate
 - Tracks vendor evolution over time (valid_from, valid_to, is_current)
+- **SHOPNOW vendor** created automatically (the main store)
 
 **New facts:**
 - `fact_vendor_performance`: KPIs per vendor (orders, revenue, quality metrics)
@@ -195,23 +213,14 @@ make update-schema
 
 **Schema modifications:**
 - `dim_product` extended with `vendor_id` (links products to vendors)
-- Existing products automatically linked to default vendor (SHOPNOW)
+- `fact_order` extended with `vendor_id NOT NULL DEFAULT 'SHOPNOW'`
+- Existing products and orders automatically linked to SHOPNOW vendor
+- Indexes created on vendor_id for performance
 
 **Security:**
 - Row-Level Security (RLS) configured for vendor data isolation
 - Vendors can only access their own data
 - Disabled by default (enable manually when ready)
-
-**Generate sample vendors:**
-```bash
-make seed-vendors  # Creates 10 realistic vendors with Faker
-```
-
-This generates vendors with:
-- Realistic company names
-- Valid email addresses
-- Random categories (electronics, fashion, home, sports, etc.)
-- Commission rates between 10-25%
 
 **Test the schema:**
 ```bash
@@ -226,12 +235,91 @@ This validates:
 
 ---
 
-## 🌊 Phase 4: Vendor Streaming
+## 🌊 Phase 4: Stream Analytics Marketplace Upgrade
 
-Enable real-time vendor event processing.
+Replace the base Stream Analytics job with the marketplace version that supports multi-vendor tracking.
 
 ```bash
-make stream-new-vendors
+make update-stream
+```
+
+**What happens:**
+
+**Infrastructure change:**
+- **Destroys**: `asa-shopnow` (base stream)
+- **Creates**: `asa-shopnow-marketplace` (new marketplace stream)
+
+**Why replace instead of update?**
+- Simulates a real production migration where the marketplace wasn't planned initially
+- The base stream inserts `vendor_id = 'SHOPNOW'` (hardcoded)
+- The marketplace stream uses `COALESCE(vendor_id, 'SHOPNOW')` to support both:
+  - ShopNow orders → `vendor_id = 'SHOPNOW'`
+  - Marketplace orders → `vendor_id` from event data
+
+**Query differences:**
+
+*Base stream (before):*
+```sql
+SELECT
+    order_id, product_id, customer_id, quantity, unit_price,
+    'SHOPNOW' AS vendor_id  -- Hardcoded
+INTO [OutputFactOrder]
+FROM [InputOrders]
+```
+
+*Marketplace stream (after):*
+```sql
+SELECT
+    order_id, product_id, customer_id, quantity, unit_price,
+    COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id  -- Dynamic
+INTO [OutputFactOrder]
+FROM [InputOrders]
+```
+
+**New capabilities:**
+- Processes orders from multiple vendors
+- Automatically assigns SHOPNOW to events without vendor_id
+- Prepares infrastructure for marketplace producer
+
+---
+
+## 🏪 Phase 5: Vendor Data Generation
+
+Generate realistic vendor data for testing.
+
+```bash
+make seed-vendors
+```
+
+**What gets created:**
+
+**Sample vendors (10 by default):**
+- Realistic company names (using Faker)
+- Valid email addresses
+- Random categories (electronics, fashion, home, sports, books, toys, food)
+- Commission rates between 10-25%
+- Mix of active (80%) and pending (20%) statuses
+
+**Total vendors after this step:**
+- 1 × SHOPNOW (official store)
+- 3 × Test vendors (V001, V002, V003 - created by migration)
+- 10 × Generated vendors
+- **Total: 14 vendors**
+
+**Custom generation:**
+```bash
+# Generate 50 vendors instead of 10
+uv run --directory scripts python seed_vendors.py --count 50
+```
+
+---
+
+## 🚀 Phase 6: Marketplace Event Streaming
+
+Enable real-time marketplace order generation with multi-vendor support.
+
+```bash
+make stream-new-vendors  # ENV=dev by default
 ```
 
 **What gets added:**
@@ -245,16 +333,36 @@ make stream-new-vendors
 - New output: `OutputDimVendor`
 - Query extended to process vendor events in real-time
 
-**Event format:**
+**Marketplace Producer activation:**
+- Container producer starts generating marketplace orders
+- Reads active vendors from `dim_vendor` (SQL query)
+- Generates orders with `vendor_id` from random vendors
+- **Auto-refresh**: Re-reads vendor list every 5 minutes
+- Interval: 90 seconds per marketplace order
+
+**Event flow:**
+```
+Container Producer
+    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = SHOPNOW)
+    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = V001, V002, etc.)
+    └─> Event Hub (vendors) → Stream Analytics → dim_vendor
+```
+
+**Marketplace order format:**
 ```json
 {
-  "vendor_id": "TECHPRO",
-  "vendor_name": "TechPro Solutions",
-  "vendor_status": "active",
-  "vendor_category": "electronics",
-  "vendor_email": "contact@techpro.com",
-  "commission_rate": 15.5,
-  "timestamp": 1732704000
+  "order_id": "uuid",
+  "customer": {...},
+  "items": [
+    {
+      "product_id": "uuid",
+      "name": "Product Name",
+      "vendor_id": "V001",  // ← Vendor ID included
+      "quantity": 2,
+      "price": 99.99
+    }
+  ],
+  "source": "marketplace"
 }
 ```
 
@@ -270,14 +378,9 @@ This will:
 4. Verify the vendor appears in `dim_vendor`
 5. Validate all fields are correct
 
-**Workflow:**
-```
-Vendor Event → Event Hub (vendors) → Stream Analytics → dim_vendor
-```
-
 ---
 
-## 🔜 Phase 5: Data Quality (Planned)
+## 🔜 Phase 7: Data Quality (Planned)
 
 Add data validation and quarantine zone.
 
@@ -289,7 +392,7 @@ Add data validation and quarantine zone.
 
 ---
 
-## 🔜 Phase 6: Monitoring & Alerting (Planned)
+## 🔜 Phase 8: Monitoring & Alerting (Planned)
 
 Add observability and automated alerting.
 
@@ -337,44 +440,6 @@ ORDER BY revenue DESC;
 
 ---
 
-## 🛠️ Available Commands
-
-```bash
-make help              # Show all available commands
-make init              # Initialize Terraform
-make plan              # Show deployment plan
-make deploy            # Deploy base infrastructure (ENV=dev by default)
-make recovery-setup    # Configure backup & disaster recovery (incremental)
-make update-schema     # Add marketplace tables (incremental)
-make status            # Check resources status
-make seed              # Generate historical data (30 days)
-make seed-quick        # Generate historical data (7 days)
-make test-base         # Test base schema
-make test-schema       # Test marketplace schema
-make test-backup       # Test Point-in-Time Restore
-make destroy           # Destroy infrastructure
-```
-
-**Environment examples:**
-```bash
-make deploy                    # Development (default)
-make deploy ENV=prod           # Production
-
-make recovery-setup            # Backup in dev (default)
-make recovery-setup ENV=prod   # Backup in prod (full features)
-```
-
-**Incremental workflow:**
-```bash
-make deploy              # 1. Base infrastructure (dev by default)
-make seed                # 2. Historical data
-make recovery-setup      # 3. Add backup (without redeploying)
-make update-schema       # 4. Add marketplace tables (without redeploying)
-make test-schema         # 5. Validate changes
-```
-
----
-
 ## 📁 Project Structure
 
 ```
@@ -405,10 +470,10 @@ make test-schema         # 5. Validate changes
 
 - Secrets stored in `.env` (not committed)
 - Encrypted connections (TLS/SSL)
-- SQL firewall configured
+- SQL firewall dynamically configured with your public IP
 - Managed Identity for containers
 
-⚠️ **Note**: Current firewall allows all IPs (0.0.0.0/0) for development. Restrict in production.
+> **Note:** The firewall rule `AllowLocalIP` is automatically updated with your current public IPv4 address during deployment.
 
 ---
 
@@ -442,5 +507,3 @@ az monitor activity-log list \
 - Email: d4v1dbr34u@gmail.com
 
 ---
-
-⭐ If this project helped you, feel free to give it a star!
