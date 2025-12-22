@@ -73,7 +73,10 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/ests/test_backup_restore.py scripts/tests/test_marketplace_schema.py .gitignore
+docs/_build/
+tests/test_backup_restore.py
+scripts/tests/test_marketplace_schema.py
+
 
 # PyBuilder
 .pybuilder/
