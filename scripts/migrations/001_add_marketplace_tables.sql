@@ -146,7 +146,44 @@ END
 GO
 
 -- ============================================================================
--- 4. Create fact_vendor_performance
+-- 4. Add vendor_id to fact_order
+-- ============================================================================
+
+PRINT 'Modifying fact_order table...';
+GO
+
+-- Add vendor_id column with DEFAULT if it doesn't exist
+IF NOT EXISTS (
+    SELECT * FROM sys.columns
+    WHERE object_id = OBJECT_ID('fact_order')
+    AND name = 'vendor_id'
+)
+BEGIN
+    ALTER TABLE fact_order
+    ADD vendor_id NVARCHAR(50) NOT NULL DEFAULT 'SHOPNOW';
+
+    PRINT '✓ Added vendor_id column to fact_order with DEFAULT SHOPNOW';
+END
+ELSE
+BEGIN
+    PRINT '⚠ vendor_id column already exists in fact_order';
+END
+GO
+
+-- Create index on vendor_id
+IF NOT EXISTS (
+    SELECT * FROM sys.indexes
+    WHERE object_id = OBJECT_ID('fact_order')
+    AND name = 'idx_order_vendor'
+)
+BEGIN
+    CREATE INDEX idx_order_vendor ON fact_order(vendor_id);
+    PRINT '✓ Created index on fact_order.vendor_id';
+END
+GO
+
+-- ============================================================================
+-- 5. Create fact_vendor_performance
 -- ============================================================================
 
 PRINT 'Creating fact_vendor_performance table...';
@@ -286,7 +323,16 @@ GO
 -- 7. Create sample vendors for testing
 -- ============================================================================
 
-PRINT 'Creating sample vendors for testing...';
+PRINT 'Creating vendors...';
+GO
+
+-- Vendor 0: SHOPNOW (la boutique principale)
+IF NOT EXISTS (SELECT * FROM dim_vendor WHERE vendor_id = 'SHOPNOW')
+BEGIN
+    INSERT INTO dim_vendor (vendor_id, vendor_name, vendor_status, vendor_category, vendor_email, commission_rate, valid_from, is_current)
+    VALUES ('SHOPNOW', 'ShopNow Official Store', 'active', 'general', 'contact@shopnow.com', 0.00, GETDATE(), 1);
+    PRINT '✓ Created vendor SHOPNOW (Official Store)';
+END
 GO
 
 -- Vendor 1: Electronics specialist

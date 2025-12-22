@@ -1,4 +1,6 @@
+# Stream Analytics - Base (original)
 resource "azurerm_stream_analytics_job" "asa_job" {
+  count                                    = var.enable_marketplace ? 0 : 1
   name                                     = "asa-shopnow"
   resource_group_name                      = var.resource_group_name
   location                                 = var.location
@@ -11,14 +13,36 @@ resource "azurerm_stream_analytics_job" "asa_job" {
   streaming_units                          = 1
   tags                                     = var.tags
 
-  transformation_query = var.enable_marketplace ? local.query_with_vendors : local.query_base
+  transformation_query = local.query_base
+}
+
+# Stream Analytics - Marketplace (nouveau stream qui remplace le base)
+resource "azurerm_stream_analytics_job" "asa_job_marketplace" {
+  count                                    = var.enable_marketplace ? 1 : 0
+  name                                     = "asa-shopnow-marketplace"
+  resource_group_name                      = var.resource_group_name
+  location                                 = var.location
+  compatibility_level                      = "1.2"
+  data_locale                              = "en-US"
+  events_late_arrival_max_delay_in_seconds = 60
+  events_out_of_order_max_delay_in_seconds = 50
+  events_out_of_order_policy               = "Adjust"
+  output_error_policy                      = "Drop"
+  streaming_units                          = 1
+  tags                                     = var.tags
+
+  transformation_query = local.query_with_vendors
 }
 
 locals {
+  # Référence dynamique au job actif (base ou marketplace)
+  active_job_name = var.enable_marketplace ? azurerm_stream_analytics_job.asa_job_marketplace[0].name : azurerm_stream_analytics_job.asa_job[0].name
+  active_job_id   = var.enable_marketplace ? azurerm_stream_analytics_job.asa_job_marketplace[0].id : azurerm_stream_analytics_job.asa_job[0].id
+
   query_base = <<QUERY
 
     /* 1. Orders -> fact_order */
-  
+
     SELECT
         o.order_id,
         i.ArrayValue.product_id,
@@ -26,7 +50,8 @@ locals {
         i.ArrayValue.quantity,
         i.ArrayValue.unit_price,
         o.status,
-        DATEADD(second, o.timestamp, '1970-01-01') AS order_timestamp
+        DATEADD(second, o.timestamp, '1970-01-01') AS order_timestamp,
+        'SHOPNOW' AS vendor_id
     INTO
         [OutputFactOrder]
     FROM
@@ -78,8 +103,8 @@ QUERY
 
   query_with_vendors = <<QUERY
 
-    /* 1. Orders -> fact_order */
-  
+    /* 1. Orders -> fact_order (with vendor_id) */
+
     SELECT
         o.order_id,
         i.ArrayValue.product_id,
@@ -87,7 +112,8 @@ QUERY
         i.ArrayValue.quantity,
         i.ArrayValue.unit_price,
         o.status,
-        DATEADD(second, o.timestamp, '1970-01-01') AS order_timestamp
+        DATEADD(second, o.timestamp, '1970-01-01') AS order_timestamp,
+        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
     INTO
         [OutputFactOrder]
     FROM
@@ -156,7 +182,7 @@ QUERY
 
 resource "azurerm_stream_analytics_stream_input_eventhub" "input_orders" {
   name                         = "InputOrders"
-  stream_analytics_job_name    = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name    = local.active_job_name
   resource_group_name          = var.resource_group_name
   eventhub_consumer_group_name = "$Default"
   eventhub_name                = "orders"
@@ -173,7 +199,7 @@ resource "azurerm_stream_analytics_stream_input_eventhub" "input_orders" {
 
 resource "azurerm_stream_analytics_stream_input_eventhub" "input_clickstream" {
   name                         = "InputClickstream"
-  stream_analytics_job_name    = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name    = local.active_job_name
   resource_group_name          = var.resource_group_name
   eventhub_consumer_group_name = "$Default"
   eventhub_name                = "clickstream"
@@ -190,7 +216,7 @@ resource "azurerm_stream_analytics_stream_input_eventhub" "input_clickstream" {
 resource "azurerm_stream_analytics_stream_input_eventhub" "input_vendors" {
   count                        = var.enable_marketplace ? 1 : 0
   name                         = "InputVendors"
-  stream_analytics_job_name    = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name    = local.active_job_name
   resource_group_name          = var.resource_group_name
   eventhub_consumer_group_name = "$Default"
   eventhub_name                = "vendors"
@@ -208,7 +234,7 @@ resource "azurerm_stream_analytics_stream_input_eventhub" "input_vendors" {
 
 resource "azurerm_stream_analytics_output_mssql" "output_fact_order" {
   name                      = "OutputFactOrder"
-  stream_analytics_job_name = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
@@ -219,7 +245,7 @@ resource "azurerm_stream_analytics_output_mssql" "output_fact_order" {
 
 resource "azurerm_stream_analytics_output_mssql" "output_dim_customer" {
   name                      = "OutputDimCustomer"
-  stream_analytics_job_name = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
@@ -230,7 +256,7 @@ resource "azurerm_stream_analytics_output_mssql" "output_dim_customer" {
 
 resource "azurerm_stream_analytics_output_mssql" "output_dim_product" {
   name                      = "OutputDimProduct"
-  stream_analytics_job_name = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
@@ -241,7 +267,7 @@ resource "azurerm_stream_analytics_output_mssql" "output_dim_product" {
 
 resource "azurerm_stream_analytics_output_mssql" "output_fact_clickstream" {
   name                      = "OutputFactClickstream"
-  stream_analytics_job_name = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
@@ -253,7 +279,7 @@ resource "azurerm_stream_analytics_output_mssql" "output_fact_clickstream" {
 resource "azurerm_stream_analytics_output_mssql" "output_dim_vendor" {
   count                     = var.enable_marketplace ? 1 : 0
   name                      = "OutputDimVendor"
-  stream_analytics_job_name = azurerm_stream_analytics_job.asa_job.name
+  stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
@@ -267,11 +293,12 @@ resource "azurerm_stream_analytics_output_mssql" "output_dim_vendor" {
 # explicite, le job reste à l'état "Stopped" et ne consomme aucun événement.
 resource "null_resource" "start_job" {
   triggers = {
-    job_id = azurerm_stream_analytics_job.asa_job.id
+    job_id = local.active_job_id
   }
 
   depends_on = [
     azurerm_stream_analytics_job.asa_job,
+    azurerm_stream_analytics_job.asa_job_marketplace,
     azurerm_stream_analytics_stream_input_eventhub.input_orders,
     azurerm_stream_analytics_stream_input_eventhub.input_clickstream,
     azurerm_stream_analytics_output_mssql.output_fact_order,
@@ -281,6 +308,6 @@ resource "null_resource" "start_job" {
   ]
 
   provisioner "local-exec" {
-    command = "az stream-analytics job start --resource-group ${var.resource_group_name} --name ${azurerm_stream_analytics_job.asa_job.name} --output-start-mode JobStartTime"
+    command = "az stream-analytics job start --resource-group ${var.resource_group_name} --name ${local.active_job_name} --output-start-mode JobStartTime"
   }
 }
