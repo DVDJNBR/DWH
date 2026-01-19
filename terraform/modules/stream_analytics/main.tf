@@ -162,7 +162,7 @@ QUERY
     FROM
         [InputClickstream]
 
-    /* 5. Vendors -> dim_vendor */
+    /* 5. Vendors -> dim_vendor (SCD Type 2) */
     SELECT
         vendor_id,
         vendor_name,
@@ -170,7 +170,9 @@ QUERY
         vendor_category,
         vendor_email,
         commission_rate,
-        DATEADD(second, timestamp, '1970-01-01') AS valid_from
+        DATEADD(second, timestamp, '1970-01-01') AS valid_from,
+        CAST(NULL AS DATETIME) AS valid_to, -- Set to NULL for current record, implies no end date yet
+        1 AS is_current                     -- Set to 1 (true) for current record
     INTO
         [OutputDimVendor]
     FROM
