@@ -88,6 +88,35 @@ module "stream_analytics" {
   quarantine_container_orders       = var.enable_quarantine ? module.quarantine_storage[0].container_orders_name : ""
   quarantine_container_clickstream  = var.enable_quarantine ? module.quarantine_storage[0].container_clickstream_name : ""
   quarantine_container_vendors      = var.enable_quarantine ? module.quarantine_storage[0].container_vendors_name : ""
+  action_group_id                   = var.enable_monitoring ? module.action_group[0].id : ""
+  enable_monitoring                 = var.enable_monitoring
+}
+
+# ============================================================================
+# Monitoring
+# ============================================================================
+
+module "action_group" {
+  count = var.enable_monitoring ? 1 : 0
+
+  source              = "./modules/action_group"
+  resource_group_name = azurerm_resource_group.main.name
+  action_group_name   = "ag-dwh-critical-alerts"
+  email_receiver      = var.alert_email
+  tags                = local.common_tags
+}
+
+module "dashboard" {
+  count = var.enable_monitoring ? 1 : 0
+
+  source                  = "./modules/dashboard"
+  dashboard_name          = "dwh-main-dashboard"
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  stream_analytics_job_id = module.stream_analytics.job_id
+  tags                    = local.common_tags
+
+  depends_on = [module.stream_analytics]
 }
 
 # ============================================================================

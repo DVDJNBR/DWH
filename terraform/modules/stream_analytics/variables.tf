@@ -78,3 +78,15 @@ variable "quarantine_container_vendors" {
   type        = string
   default     = ""
 }
+
+variable "enable_monitoring" {
+  description = "Enable monitoring alerts for Stream Analytics"
+  type        = bool
+  default     = false
+}
+
+variable "action_group_id" {
+  description = "The ID of the Action Group for alerts"
+  type        = string
+  default     = ""
+}

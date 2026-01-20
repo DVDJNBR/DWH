@@ -102,6 +102,22 @@ stream-new-vendors: ## [7] Enable vendor events streaming (requires ENV)
 		-var="enable_marketplace=true"
 	@echo "$(GREEN)✅ Marketplace streaming enabled!$(NC)"
 
+enable-monitoring: ## [8] Enable monitoring dashboard and alerts
+	@echo "$(GREEN)📊 Enabling monitoring and alerting...$(NC)"
+	@echo "$(YELLOW)⚠️  This creates Azure Dashboard + Action Group + Alert Rules$(NC)"
+	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
+	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)🔧 Applying Terraform changes...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="enable_marketplace=true" \
+		-var="enable_monitoring=true"
+	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
+	@az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
+	@echo "$(GREEN)✅ Monitoring enabled and stream restarted!$(NC)"
+	@echo "$(CYAN)📊 Dashboard: https://portal.azure.com/#@/dashboard/arm/subscriptions/.../resourceGroups/$(RESOURCE_GROUP)/providers/Microsoft.Portal/dashboards/dwh-main-dashboard$(NC)"
+
 ##@ Testing
 
 test-base: ## Test base schema (after deploy)
@@ -172,15 +188,15 @@ clean: ## Clean Terraform temporary files
 
 ##@ Stream Analytics
 
-start: ## Start Stream Analytics job
+stream-start: ## Start Stream Analytics job (asa-shopnow-marketplace)
 	@echo "$(GREEN)▶️  Starting Stream Analytics job...$(NC)"
-	az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) --output-start-mode JobStartTime
+	az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
 
-stop: ## Stop Stream Analytics job
+stream-stop: ## Stop Stream Analytics job (asa-shopnow-marketplace)
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
-	az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB)
+	az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace
 
-logs: ## Show Stream Analytics logs
+stream-logs: ## Show Stream Analytics activity logs
 	@echo "$(GREEN)📜 Stream Analytics logs...$(NC)"
 	az monitor activity-log list --resource-group $(RESOURCE_GROUP) --max-events 20 --query "[].{Time:eventTimestamp, Level:level, Operation:operationName.localizedValue, Status:status.localizedValue}" -o table
 
