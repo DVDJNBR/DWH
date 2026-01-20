@@ -41,3 +41,40 @@ variable "enable_marketplace" {
   type        = bool
   default     = false
 }
+
+variable "enable_quarantine" {
+  description = "Enable data quarantine for invalid events"
+  type        = bool
+  default     = false
+}
+
+variable "quarantine_storage_account_name" {
+  description = "The name of the storage account to use for quarantine"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_storage_account_key" {
+  description = "The access key for the quarantine storage account"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "quarantine_container_orders" {
+  description = "The name of the container for quarantined orders"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_container_clickstream" {
+  description = "The name of the container for quarantined clickstream events"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_container_vendors" {
+  description = "The name of the container for quarantined vendors"
+  type        = string
+  default     = ""
+}

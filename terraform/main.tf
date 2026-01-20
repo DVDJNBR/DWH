@@ -48,13 +48,27 @@ module "sql_database" {
 }
 
 # ============================================================================
+# Quarantine Storage Module
+# ============================================================================
+
+module "quarantine_storage" {
+  count  = var.enable_quarantine ? 1 : 0
+  source = "./modules/quarantine_storage"
+
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  unique_suffix       = replace(local.unique_name, "-", "")
+  tags                = local.common_tags
+}
+
+# ============================================================================
 # Stream Analytics Module
 # ============================================================================
 
 module "stream_analytics" {
   source = "./modules/stream_analytics"
 
-  depends_on = [module.event_hubs, module.sql_database]
+  depends_on = [module.event_hubs, module.sql_database, module.quarantine_storage]
 
   resource_group_name     = azurerm_resource_group.main.name
   location                = azurerm_resource_group.main.location
@@ -66,6 +80,14 @@ module "stream_analytics" {
   sql_admin_password      = var.sql_admin_password
   enable_marketplace      = var.enable_marketplace
   tags                    = local.common_tags
+
+  # Quarantine configuration
+  enable_quarantine                 = var.enable_quarantine
+  quarantine_storage_account_name   = var.enable_quarantine ? module.quarantine_storage[0].storage_account_name : ""
+  quarantine_storage_account_key    = var.enable_quarantine ? module.quarantine_storage[0].primary_access_key : ""
+  quarantine_container_orders       = var.enable_quarantine ? module.quarantine_storage[0].container_orders_name : ""
+  quarantine_container_clickstream  = var.enable_quarantine ? module.quarantine_storage[0].container_clickstream_name : ""
+  quarantine_container_vendors      = var.enable_quarantine ? module.quarantine_storage[0].container_vendors_name : ""
 }
 
 # ============================================================================

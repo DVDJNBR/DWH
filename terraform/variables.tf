@@ -96,3 +96,9 @@ variable "enable_marketplace" {
   type        = bool
   default     = false
 }
+
+variable "enable_quarantine" {
+  description = "Enable data quality quarantine zone (Blob Storage)"
+  type        = bool
+  default     = false
+}
