@@ -102,3 +102,9 @@ variable "enable_quarantine" {
   type        = bool
   default     = false
 }
+
+variable "alert_email" {
+  description = "Email address for critical alerts."
+  type        = string
+  default     = "dbreau.ext@simplonformations.co"
+}
