@@ -38,7 +38,7 @@ fake = Faker()
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+    result = sh.terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
     return result.strip()
 
 def get_db_connection():
@@ -64,11 +64,12 @@ def check_vendors_eventhub():
     """Check if vendors Event Hub exists"""
     print(f"{CYAN}🔍 Checking vendors Event Hub...{NC}")
     try:
-        namespace = get_terraform_output("eventhub_namespace_name")
+        namespace = get_terraform_output("eventhub_namespace")
+        rg = get_terraform_output("resource_group_name")
         result = sh.az("eventhubs", "eventhub", "show",
                       "--namespace-name", namespace,
                       "--name", "vendors",
-                      "--resource-group", f"rg-e6-{os.getenv('TF_VAR_username')}",
+                      "--resource-group", rg,
                       "--query", "name",
                       "-o", "tsv")
         print(f"{GREEN}✓ Vendors Event Hub exists{NC}")
@@ -81,9 +82,19 @@ def check_vendors_eventhub():
 def send_vendor_event():
     """Send a test vendor event"""
     print(f"{CYAN}📤 Sending test vendor event...{NC}")
-    
-    # Get Event Hub connection string
-    connection_string = get_terraform_output("eventhub_send_connection_string")
+
+    # Get Event Hub connection string via Azure CLI
+    namespace = get_terraform_output("eventhub_namespace")
+    rg = get_terraform_output("resource_group_name")
+
+    connection_string = sh.az(
+        "eventhubs", "namespace", "authorization-rule", "keys", "list",
+        "--namespace-name", namespace,
+        "--name", "send-policy",
+        "--resource-group", rg,
+        "--query", "primaryConnectionString",
+        "-o", "tsv"
+    ).strip()
     
     # Create vendor event
     vendor_event = {

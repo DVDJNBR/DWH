@@ -64,10 +64,13 @@ recovery-setup: ## [3] Backup & disaster recovery (ENV=dev: 1 day, ENV=prod: 7 d
 		-var="environment=$(ENV)" \
 		-var="enable_backup=true"
 
-update-schema: ## [4] Apply schema migrations (marketplace)
+update-schema: ## [4] Apply schema migrations (marketplace + SCD Type 2)
 	@echo "$(GREEN)🔄 Applying schema migrations...$(NC)"
 	@echo "$(YELLOW)⚠️  This modifies the existing database schema$(NC)"
+	@echo "$(CYAN)📦 Migration 001: Marketplace tables...$(NC)"
 	@uv run --directory scripts python migrations/apply_migration.py 001
+	@echo "$(CYAN)📦 Migration 002: SCD Type 2 implementation...$(NC)"
+	@uv run --directory scripts python migrations/apply_migration.py 002
 
 update-stream: ## [5] Replace base stream with marketplace stream
 	@echo "$(GREEN)🌊 Replacing Stream Analytics with marketplace version...$(NC)"
