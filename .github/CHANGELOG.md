@@ -1,3 +1,15 @@
+# [2.1.0-beta.2](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2026-01-20)
+
+
+### Features
+
+* add categorized help menu in English ([cec0e49](https://github.com/DVDJNBR/DWH/commit/cec0e49ae944d54511f70d4a54ebef79d6ab3097))
+* add marketplace producer with vendor_id support ([39e037d](https://github.com/DVDJNBR/DWH/commit/39e037dc56d6ece89ae1ddbff7b837d9bd6e2d23))
+* add quick backup test for faster validation ([13e9735](https://github.com/DVDJNBR/DWH/commit/13e973529b365371b95c4b8972cd254ecbb56c34))
+* add vendor streaming with make stream-new-vendors ([14661f5](https://github.com/DVDJNBR/DWH/commit/14661f52a777c868acd01fb87e849433cfb0cf5c))
+* **marketplace:** implement two-stream architecture with vendor_id support ([9a37c63](https://github.com/DVDJNBR/DWH/commit/9a37c63c4d94a8446a430d3ba367f781686fda45))
+* **quarantine:** Implement data quality quarantine ([de224d0](https://github.com/DVDJNBR/DWH/commit/de224d0aac79bed03bf728b37e4c9d2c0b2ab64a))
+
 # [2.1.0-beta.1](https://github.com/DVDJNBR/DWH/compare/v2.0.4...v2.1.0-beta.1) (2025-11-27)
 
 
