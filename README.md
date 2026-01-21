@@ -61,6 +61,13 @@ Destroys `asa-shopnow`, creates `asa-shopnow-marketplace` with multi-vendor supp
 make update-stream
 ```
 
+**Enable data quality quarantine**
+Creates Azure Blob Storage for invalid events
+```bash
+make enable-quarantine
+```
+- `make test-quarantine` to test invalid events routing
+
 **Generate realistic vendors**
 Creates 10 vendors with Faker (14 total with migration defaults)
 ```bash
@@ -74,7 +81,12 @@ make stream-new-vendors
 ```
 - `make test-vendors-stream` to test vendor event processing
 
----
+**Enable monitoring**
+Dashboard and automated alerts
+```bash
+make enable-monitoring
+```
+- `make stream-start` / `make stream-stop` to control Stream Analytics job
 
 **Other useful commands:**
 ```bash
@@ -333,19 +345,18 @@ make stream-new-vendors  # ENV=dev by default
 - New output: `OutputDimVendor`
 - Query extended to process vendor events in real-time
 
-**Marketplace Producer activation:**
-- Container producer starts generating marketplace orders
+**Marketplace Producer:**
+- Single unified producer handles all vendors (including SHOPNOW)
 - Reads active vendors from `dim_vendor` (SQL query)
-- Generates orders with `vendor_id` from random vendors
+- Generates orders with random `vendor_id` from all active vendors
 - **Auto-refresh**: Re-reads vendor list every 5 minutes
-- Interval: 90 seconds per marketplace order
+- Interval: 90 seconds per order
 
 **Event flow:**
 ```
-Container Producer
-    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = SHOPNOW)
-    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = V001, V002, etc.)
-    └─> Event Hub (vendors) → Stream Analytics → dim_vendor
+Marketplace Producer
+    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = SHOPNOW, V001, V002, etc.)
+    └─> Event Hub (vendors) → Stream Analytics → stg_vendor → dim_vendor (SCD Type 2)
 ```
 
 **Marketplace order format:**
@@ -357,9 +368,9 @@ Container Producer
     {
       "product_id": "uuid",
       "name": "Product Name",
-      "vendor_id": "V001",  // ← Vendor ID included
+      "vendor_id": "V001",
       "quantity": 2,
-      "price": 99.99
+      "unit_price": 99.99
     }
   ],
   "source": "marketplace"
@@ -377,31 +388,87 @@ This will:
 3. Wait for Stream Analytics to process it
 4. Verify the vendor appears in `dim_vendor`
 5. Validate all fields are correct
+6. Display last 10 orders with vendor/customer/product joins
+
+**Sample output:**
+```
+─────────────────────────────────────────────────────────────
+  Order #1: abc123-def456
+  📅 Date: 2026-01-21 10:15:30
+  👤 Customer: John Smith (Paris)
+  📦 Product: Wireless Headphones [Electronics]
+  🏪 Vendor: TechStore Pro [electronics]
+  💰 2 x $149.99 = $299.98
+  📈 Commission: 15.0% = $45.00
+─────────────────────────────────────────────────────────────
+```
 
 ---
 
-## 🔜 Phase 7: Data Quality (Planned)
+## ✅ Phase 7: Data Quality (Quarantine)
 
-Add data validation and quarantine zone.
+Add data validation and quarantine zone for invalid events.
 
-**Planned features:**
-- Quarantine table for problematic data
-- Validation rules in Stream Analytics
-- Data quality scoring
-- Automated alerts for quality issues
+```bash
+make enable-quarantine
+```
+
+**What gets added:**
+
+**Quarantine Storage:**
+- Azure Blob Storage container for quarantined data
+- Separate containers for orders, clickstream, and vendors
+
+**Stream Analytics validation:**
+- Real-time validation of incoming events
+- Invalid data routed to quarantine instead of dropping
+- Validation rules: null checks, required fields, data types
+
+**Quarantine outputs:**
+- `QuarantineOrders`: Invalid order events
+- `QuarantineClickstream`: Invalid clickstream events
+- `QuarantineVendors`: Invalid vendor events
+
+**Test the quarantine:**
+```bash
+make test-quarantine
+```
+
+This will:
+1. Send invalid events (null order_id, null session_id)
+2. Wait for Stream Analytics to process
+3. Verify events arrive in quarantine blob storage
+4. Confirm they're NOT in the SQL database
 
 ---
 
-## 🔜 Phase 8: Monitoring & Alerting (Planned)
+## ✅ Phase 8: Monitoring & Alerting
 
-Add observability and automated alerting.
+Add observability dashboard and automated alerting.
 
-**Planned features:**
-- Log Analytics Workspace
-- Application Insights
-- Automated alerts (errors, latency, resource usage)
-- Monitoring dashboard
-- Key metrics tracking
+```bash
+make enable-monitoring
+```
+
+**What gets added:**
+
+**Azure Dashboard:**
+- Real-time monitoring of Stream Analytics job
+- Metrics: SU utilization, input/output events, errors, watermark delay
+- Direct links to Event Hubs and SQL Database
+
+**Action Group:**
+- Email notifications for critical alerts
+- Configurable alert email in `terraform.tfvars`
+
+**Alert Rules:**
+- `alert-asa-job-failed`: Triggers when Stream Analytics has errors (Severity 1)
+- `alert-asa-job-stopped`: Triggers when job stops running (Severity 0 - Critical)
+
+**Dashboard URL:**
+```
+https://portal.azure.com/#@/dashboard/arm/.../dwh-main-dashboard
+```
 
 ---
 
@@ -444,23 +511,39 @@ ORDER BY revenue DESC;
 
 ```
 .
-├── terraform/              # Infrastructure as Code
-│   ├── main.tf            # Main configuration
-│   ├── variables.tf       # Variables
-│   ├── locals.tf          # Environment-based logic
-│   ├── dwh_schema.sql     # SQL schema
-│   └── modules/           # Terraform modules
-│       ├── event_hubs/
-│       ├── sql_database/
-│       ├── stream_analytics/
-│       └── container_producers/
-├── data-generator/        # Event data generator
-│   ├── producers.py
+├── terraform/                    # Infrastructure as Code
+│   ├── main.tf                  # Main configuration
+│   ├── variables.tf             # Variables
+│   ├── locals.tf                # Environment-based logic
+│   ├── dwh_schema.sql           # SQL schema
+│   └── modules/
+│       ├── event_hubs/          # Event Hub namespace and hubs
+│       ├── sql_database/        # SQL Server and database
+│       ├── stream_analytics/    # ASA job, inputs, outputs, alerts
+│       ├── container_producers/ # Container Instance for producers
+│       ├── action_group/        # Alert notification group
+│       └── dashboard/           # Azure monitoring dashboard
+├── data-generator/              # Event data generator
+│   ├── producers.py             # Base producer (legacy)
+│   ├── producers_marketplace.py # Marketplace producer (active)
+│   ├── supervisord.conf         # Process manager config
 │   └── Dockerfile
-├── scripts/               # Utility scripts
+├── scripts/                     # Utility scripts
 │   ├── seed_historical_data.py
-│   └── test_backup_restore.py
-├── Makefile              # Simplified commands
+│   ├── seed_vendors.py
+│   ├── migrations/              # SQL migrations
+│   │   ├── 001_add_marketplace_tables.sql
+│   │   └── 002_implement_scd2_vendor.sql
+│   └── tests/                   # Test scripts
+│       ├── test_base_schema.py
+│       ├── test_marketplace_schema.py
+│       ├── test_backup_quick.py
+│       ├── test_vendors_stream.py
+│       └── test_quarantine.py
+├── docs/                        # Documentation
+│   ├── monitoring.md            # Monitoring & alerts guide
+│   └── stories/                 # Development stories
+├── Makefile                     # Simplified commands
 └── README.md
 ```
 

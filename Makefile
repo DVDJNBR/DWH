@@ -83,11 +83,11 @@ update-stream: ## [5] Replace base stream with marketplace stream
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve -var="enable_marketplace=true"
 	@echo "$(GREEN)✅ Stream Analytics marketplace deployed!$(NC)"
 
-seed-vendors: ## [6] Generate realistic vendors with Faker
+seed-vendors: ## [7] Generate realistic vendors with Faker
 	@echo "$(GREEN)🏪 Generating vendors with Faker...$(NC)"
 	@uv run --directory scripts python seed_vendors.py --count 10
 
-stream-new-vendors: ## [7] Enable vendor events streaming (requires ENV)
+stream-new-vendors: ## [8] Enable vendor events streaming (requires ENV)
 	@echo "$(GREEN)🌊 Enabling vendor streaming (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  This adds vendor Event Hub and activates marketplace producer$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
@@ -102,7 +102,23 @@ stream-new-vendors: ## [7] Enable vendor events streaming (requires ENV)
 		-var="enable_marketplace=true"
 	@echo "$(GREEN)✅ Marketplace streaming enabled!$(NC)"
 
-enable-monitoring: ## [8] Enable monitoring dashboard and alerts
+enable-quarantine: ## [6] Enable data quality quarantine zone
+	@echo "$(GREEN)🗑️  Enabling data quality quarantine...$(NC)"
+	@echo "$(YELLOW)⚠️  This creates Azure Blob Storage for invalid events$(NC)"
+	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
+	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)🔧 Applying Terraform changes...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="enable_marketplace=true" \
+		-var="enable_quarantine=true"
+	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
+	@az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
+	@echo "$(GREEN)✅ Quarantine enabled and stream restarted!$(NC)"
+	@echo "$(CYAN)💡 Test with: make test-quarantine$(NC)"
+
+enable-monitoring: ## [9] Enable monitoring dashboard and alerts
 	@echo "$(GREEN)📊 Enabling monitoring and alerting...$(NC)"
 	@echo "$(YELLOW)⚠️  This creates Azure Dashboard + Action Group + Alert Rules$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
@@ -112,6 +128,7 @@ enable-monitoring: ## [8] Enable monitoring dashboard and alerts
 	@echo "$(GREEN)🔧 Applying Terraform changes...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
 		-var="enable_marketplace=true" \
+		-var="enable_quarantine=true" \
 		-var="enable_monitoring=true"
 	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
 	@az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
@@ -140,6 +157,10 @@ test-backup-full: ## Test Point-in-Time Restore (slow, full restore)
 test-vendors-stream: ## Test vendor events streaming
 	@echo "$(GREEN)🧪 Testing vendor streaming...$(NC)"
 	@uv run --directory scripts python tests/test_vendors_stream.py
+
+test-quarantine: ## Test data quality quarantine (invalid events)
+	@echo "$(GREEN)🧪 Testing quarantine...$(NC)"
+	@uv run --directory scripts python tests/test_quarantine.py
 
 ##@ Terraform (Advanced)
 

@@ -71,11 +71,10 @@ def get_active_vendors():
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT vendor_id, vendor_name 
-            FROM dim_vendor 
-            WHERE is_current = 1 
+            SELECT vendor_id, vendor_name
+            FROM dim_vendor
+            WHERE is_current = 1
             AND vendor_status = 'active'
-            AND vendor_id != 'SHOPNOW'
         """)
         
         vendors = [{"vendor_id": row.vendor_id, "vendor_name": row.vendor_name} 
@@ -108,7 +107,8 @@ def build_marketplace_order(now, vendors):
         qty = random.randint(1, 3)
         item = product.copy()
         item["quantity"] = qty
-        item["vendor_id"] = vendor["vendor_id"]  # Add vendor_id to each item
+        item["unit_price"] = product["price"]  # ASA expects unit_price
+        item["vendor_id"] = vendor["vendor_id"]
         items.append(item)
         total_amount += product["price"] * qty
     
