@@ -90,3 +90,8 @@ variable "action_group_id" {
   type        = string
   default     = ""
 }
+
+variable "resource_group_id" {
+  description = "The ID of the Resource Group for activity log alerts"
+  type        = string
+}

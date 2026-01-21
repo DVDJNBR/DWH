@@ -88,8 +88,11 @@ module "stream_analytics" {
   quarantine_container_orders       = var.enable_quarantine ? module.quarantine_storage[0].container_orders_name : ""
   quarantine_container_clickstream  = var.enable_quarantine ? module.quarantine_storage[0].container_clickstream_name : ""
   quarantine_container_vendors      = var.enable_quarantine ? module.quarantine_storage[0].container_vendors_name : ""
-  action_group_id                   = var.enable_monitoring ? module.action_group[0].id : ""
+
+  # Monitoring configuration
   enable_monitoring                 = var.enable_monitoring
+  action_group_id                   = var.enable_monitoring ? module.action_group[0].id : ""
+  resource_group_id                 = azurerm_resource_group.main.id
 }
 
 # ============================================================================
