@@ -536,22 +536,19 @@ resource "azurerm_monitor_metric_alert" "asa_job_failed" {
   tags = var.tags
 }
 
-resource "azurerm_monitor_metric_alert" "asa_job_stopped" {
+resource "azurerm_monitor_activity_log_alert" "asa_job_stop_or_fail" {
   count               = var.enable_monitoring ? 1 : 0
-  name                = "alert-asa-job-stopped"
+  name                = "alert-asa-job-stop-or-fail"
   resource_group_name = var.resource_group_name
-  scopes              = [local.active_job_id]
-  description         = "Alert when Stream Analytics job stops running"
-  severity            = 0
-  frequency           = "PT1M"
-  window_size         = "PT1M"
+  location            = "global"
+  scopes              = [var.resource_group_id]
+  description         = "Alert when Stream Analytics job stops or fails"
 
   criteria {
-    metric_namespace = "Microsoft.StreamAnalytics/streamingjobs"
-    metric_name      = "ResourceUtilization"
-    aggregation      = "Average"
-    operator         = "LessThanOrEqual"
-    threshold        = 0
+    resource_id    = local.active_job_id
+    operation_name = "Microsoft.StreamAnalytics/streamingjobs/stop/action"
+    category       = "Administrative"
+    status         = "Succeeded"
   }
 
   action {
