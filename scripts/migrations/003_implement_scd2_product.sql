@@ -17,13 +17,17 @@ PRINT 'Starting Migration 003: Implement SCD Type 2 for dim_product';
 GO
 
 -- ============================================================================
--- 0. Pre-migration: Handle existing dim_product
+-- 0. Pre-migration: Handle existing dim_product and dependencies
 -- ============================================================================
 
 -- If dim_product exists without SCD2 columns, we need to adapt it or re-create it.
--- For simplicity and assuming initial deployment, we will drop and recreate.
--- In a real-world scenario with existing data, a more complex migration
--- involving data movement would be necessary.
+-- In Azure SQL, we cannot drop a table if it is referenced by a Security Policy.
+IF EXISTS (SELECT * FROM sys.security_policies WHERE name = 'VendorAccessPolicy')
+BEGIN
+    PRINT 'Dropping Security Policy VendorAccessPolicy to allow dim_product modification...';
+    DROP SECURITY POLICY Security.VendorAccessPolicy;
+END
+GO
 
 IF OBJECT_ID('dbo.dim_product', 'U') IS NOT NULL
 BEGIN
@@ -327,7 +331,27 @@ PRINT '✓ Test cleanup complete';
 GO
 
 -- ============================================================================
--- 6. Verification
+-- 7. Re-establish Security Policy
+-- ============================================================================
+
+PRINT 'Re-establishing Row-Level Security policy...';
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.security_policies WHERE name = 'VendorAccessPolicy')
+BEGIN
+    CREATE SECURITY POLICY Security.VendorAccessPolicy
+    ADD FILTER PREDICATE Security.fn_VendorAccessPredicate(vendor_id)
+    ON dbo.dim_product,
+    ADD FILTER PREDICATE Security.fn_VendorAccessPredicate(vendor_id)
+    ON dbo.dim_vendor
+    WITH (STATE = OFF); -- Keeps it disabled by default as per migration 001
+    
+    PRINT '✓ Security policy VendorAccessPolicy re-established (disabled)';
+END
+GO
+
+-- ============================================================================
+-- 8. Verification
 -- ============================================================================
 
 PRINT '';
@@ -337,6 +361,7 @@ PRINT '=========================================================================
 PRINT '';
 PRINT 'Summary:';
 PRINT '--------';
+PRINT '✓ Security Policy handled for migration';
 PRINT '✓ dim_product table adapted for SCD Type 2';
 PRINT '✓ Staging table created: stg_product';
 PRINT '✓ Stored procedure created: sp_merge_product_scd2';

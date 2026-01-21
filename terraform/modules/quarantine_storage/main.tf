@@ -2,7 +2,7 @@
 # Provides Azure Blob Storage for data quality quarantine zone
 
 resource "azurerm_storage_account" "quarantine" {
-  name                     = "stquarantine${var.unique_suffix}"
+  name                     = "stq${var.unique_suffix}"
   resource_group_name      = var.resource_group_name
   location                 = var.location
   account_tier             = "Standard"

@@ -61,14 +61,14 @@ def get_db_connection():
         sys.exit(1)
 
     conn_str = (
-        f"DRIVER={{ODBC Driver 18 for SQL Server}};";
-        f"SERVER={server}";
-        f"DATABASE={database}";
-        f"UID={username}";
-        f"PWD={password}";
-        f"Encrypt=yes";
-        f"TrustServerCertificate=no";
-        f"Connection Timeout=30";
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+        f"SERVER={server};"
+        f"DATABASE={database};"
+        f"UID={username};"
+        f"PWD={password};"
+        f"Encrypt=yes;"
+        f"TrustServerCertificate=no;"
+        f"Connection Timeout=30;"
     )
     return pyodbc.connect(conn_str)
 
