@@ -71,6 +71,8 @@ update-schema: ## [4] Apply schema migrations (marketplace + SCD Type 2)
 	@uv run --directory scripts python migrations/apply_migration.py 001
 	@echo "$(CYAN)📦 Migration 002: SCD Type 2 implementation...$(NC)"
 	@uv run --directory scripts python migrations/apply_migration.py 002
+	@echo "$(CYAN)📦 Migration 003: SCD Type 2 for products...$(NC)"
+	@uv run --directory scripts python migrations/apply_migration.py 003
 
 update-stream: ## [5] Replace base stream with marketplace stream
 	@echo "$(GREEN)🌊 Replacing Stream Analytics with marketplace version...$(NC)"
@@ -158,9 +160,17 @@ test-vendors-stream: ## Test vendor events streaming
 	@echo "$(GREEN)🧪 Testing vendor streaming...$(NC)"
 	@uv run --directory scripts python tests/test_vendors_stream.py
 
+test-scd2-vendor: ## Test SCD Type 2 implementation for vendors
+	@echo "$(GREEN)🧪 Testing SCD Type 2 for vendors...$(NC)"
+	@uv run --directory scripts python tests/test_scd2_vendor.py
+
 test-quarantine: ## Test data quality quarantine (invalid events)
 	@echo "$(GREEN)🧪 Testing quarantine...$(NC)"
 	@uv run --directory scripts python tests/test_quarantine.py
+
+test-scd2-product: ## Test SCD Type 2 implementation for products
+	@echo "$(GREEN)🧪 Testing SCD Type 2 for products...$(NC)"
+	@uv run --directory scripts python tests/test_scd2_product.py
 
 ##@ Terraform (Advanced)
 

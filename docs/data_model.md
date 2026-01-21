@@ -13,7 +13,7 @@ The core schema is defined in `terraform/dwh_schema.sql`.
 ### Dimensions
 
 *   **`dim_customer`** (SCD Type 1): Stores information about customers.
-*   **`dim_product`** (SCD Type 1): Stores information about products.
+*   **`dim_product`** (SCD Type 2 - **Implemented**): Stores information about products, with historical tracking of changes. See [SCD Type 2 Implementation](#scd-type-2-implementation) below for details.
 *   **`dim_vendor`** (SCD Type 2 - **Implemented**): Stores information about vendors, with historical tracking of changes. See [SCD Type 2 Implementation](#scd-type-2-implementation) below for details.
 
 ### Facts
@@ -139,23 +139,24 @@ FROM
 
 ### Testing
 
-The SCD Type 2 implementation can be tested with:
+The SCD Type 2 implementations can be tested with:
 
 ```bash
-# Comprehensive SCD Type 2 test suite
-uv run --directory scripts python tests/test_scd2_vendor.py
+# Test SCD Type 2 for vendors
+make test-scd2-vendor
 ```
 
-This test:
-1. Inserts a new vendor and verifies it appears in `dim_vendor` with `is_current = 1`
-2. Updates the vendor with changed fields
-3. Verifies the old record is closed (`is_current = 0`, `valid_to` populated)
-4. Verifies the new record is active (`is_current = 1`, `valid_to = NULL`)
+These tests:
+1. Insert a new entity and verify it appears with `is_current = 1`
+2. Update the entity with changed fields
+3. Verify the old record is closed (`is_current = 0`, `valid_to` populated)
+4. Verify the new record is active (`is_current = 1`, `valid_to = NULL`)
 
 ### Migration Files
 
 - **`scripts/migrations/001_add_marketplace_tables.sql`**: Creates initial `dim_vendor` table with SCD Type 2 structure
 - **`scripts/migrations/002_implement_scd2_vendor.sql`**: Implements staging table, stored procedure, and trigger
+- **`scripts/migrations/003_implement_scd2_product.sql`**: Implements staging table, stored procedure, and trigger for products
 
 ### Performance Considerations
 

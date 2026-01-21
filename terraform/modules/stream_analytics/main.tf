@@ -93,7 +93,7 @@ locals {
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
     SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
-    INTO [OutputDimProduct]
+    INTO [OutputStgProduct]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
     SELECT customer.id AS customer_id, customer.name, customer.email, customer.address, customer.city, customer.country
@@ -151,7 +151,7 @@ QUERY
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
     SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
-    INTO [OutputDimProduct]
+    INTO [OutputStgProduct]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
     SELECT customer.id AS customer_id, customer.name, customer.email, customer.address, customer.city, customer.country
@@ -195,7 +195,7 @@ QUERY
         i.ArrayValue.category,
         COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
     INTO
-        [OutputDimProduct]
+        [OutputStgProduct]
     FROM
         [InputOrders] o
     CROSS APPLY GetArrayElements(o.items) AS i
@@ -257,7 +257,7 @@ QUERY
         i.ArrayValue.category,
         COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
     INTO
-        [OutputDimProduct]
+        [OutputStgProduct]
     FROM
         [InputOrders] o
     CROSS APPLY GetArrayElements(o.items) AS i
@@ -382,15 +382,16 @@ resource "azurerm_stream_analytics_output_mssql" "output_dim_customer" {
   table                     = "dim_customer"
 }
 
-resource "azurerm_stream_analytics_output_mssql" "output_dim_product" {
-  name                      = "OutputDimProduct"
+
+resource "azurerm_stream_analytics_output_mssql" "output_stg_product" {
+  name                      = "OutputStgProduct"
   stream_analytics_job_name = local.active_job_name
   resource_group_name       = var.resource_group_name
   server                    = var.sql_server_fqdn
   user                      = var.sql_admin_login
   password                  = var.sql_admin_password
   database                  = var.sql_database_name
-  table                     = "dim_product"
+  table                     = "stg_product"
 }
 
 resource "azurerm_stream_analytics_output_mssql" "output_fact_clickstream" {
@@ -490,7 +491,7 @@ resource "null_resource" "start_job" {
     azurerm_stream_analytics_stream_input_eventhub.input_clickstream,
     azurerm_stream_analytics_output_mssql.output_fact_order,
     azurerm_stream_analytics_output_mssql.output_dim_customer,
-    azurerm_stream_analytics_output_mssql.output_dim_product,
+    azurerm_stream_analytics_output_mssql.output_stg_product,
     azurerm_stream_analytics_output_mssql.output_fact_clickstream,
     azurerm_stream_analytics_output_blob.quarantine_orders,
     azurerm_stream_analytics_output_blob.quarantine_clickstream,

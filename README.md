@@ -111,7 +111,7 @@ This project is part of a **professional certification program** (E6 - Améliore
 - **Security**: Ensure vendors only access their own data
 
 **Starting point:**
-- Basic Data Warehouse with star schema (`dim_customer`, `dim_product`, `fact_order`, `fact_clickstream`)
+- Basic Data Warehouse with star schema (`dim_customer` (SCD Type 1), `dim_product` (SCD Type 2), `fact_order`, `fact_clickstream`)
 - Real-time ingestion via Azure Event Hubs
 - No backup, monitoring, or security features
 
@@ -224,7 +224,7 @@ make update-schema
 - `fact_stock`: Stock levels per vendor and product
 
 **Schema modifications:**
-- `dim_product` extended with `vendor_id` (links products to vendors)
+- `dim_product` extended with `vendor_id` (links products to vendors) and now supports **SCD Type 2** for historization.
 - `fact_order` extended with `vendor_id NOT NULL DEFAULT 'SHOPNOW'`
 - Existing products and orders automatically linked to SHOPNOW vendor
 - Indexes created on vendor_id for performance
@@ -405,7 +405,29 @@ This will:
 
 ---
 
-## ✅ Phase 7: Data Quality (Quarantine)
+## 📦 Phase 7: Product Historization (SCD Type 2)
+
+This step enhances the `dim_product` dimension to track its full history, enabling more powerful temporal analysis. This is an example of iterative improvement on the data warehouse after the initial marketplace launch.
+
+The necessary database changes for this are included in the main `update-schema` command.
+
+```bash
+make update-schema
+```
+
+**What gets added:**
+
+- **`dim_product` becomes SCD Type 2**: The table is modified to include `valid_from`, `valid_to`, and `is_current` columns to track changes.
+- **Staging & Processing**: A new `stg_product` table and a stored procedure (`sp_merge_product_scd2`) are created to automatically process incoming data and apply the SCD2 logic.
+
+**Test the implementation:**
+```bash
+make test-scd2-product
+```
+
+---
+
+## ✅ Phase 8: Data Quality (Quarantine)
 
 Add data validation and quarantine zone for invalid events.
 
@@ -442,7 +464,7 @@ This will:
 
 ---
 
-## ✅ Phase 8: Monitoring & Alerting
+## ✅ Phase 9: Monitoring & Alerting
 
 Add observability dashboard and automated alerting.
 
@@ -579,9 +601,13 @@ az monitor activity-log list \
 
 - **Event Hubs**: Incoming/outgoing messages, errors
 - **Stream Analytics**: Processed events, latency, errors
-- **SQL Database**: DTU usage, connections, size
+### Current Test Coverage
 
----
+- **Base Verification**: `make test-base` (Schema validation)
+- **Backup Verification**: `make test-backup` (DR validation - C16/C14)
+- **Marketplace Verification**: `make test-schema` (Validation of new model - C13/C17)
+- **Vendor SCD2 Verification**: `make test-scd2-vendor` (SCD Type 2 validation for vendors)
+- **Product SCD2 Verification**: `make test-scd2-product` (SCD Type 2 validation for products)
 
 ## 👤 Author
 

@@ -73,7 +73,7 @@ DWH/
 
 ### Current Star Schema
 
-- **Dimensions**: `dim_customer` (SCD Type 1), `dim_product` (SCD Type 1), `dim_vendor` (SCD Type 2 - In Progress).
+- **Dimensions**: `dim_customer` (SCD Type 1), `dim_product` (SCD Type 2), `dim_vendor` (SCD Type 2 - In Progress).
 - **Facts**: `fact_order`, `fact_clickstream`, `fact_vendor_performance` (Planned), `fact_stock` (Planned).
 
 ### Schema Location
