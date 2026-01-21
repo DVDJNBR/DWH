@@ -176,7 +176,7 @@ def verify_vendor_data(vendor_event):
         (row.vendor_status == vendor_event['vendor_status'], "vendor_status"),
         (row.vendor_category == vendor_event['vendor_category'], "vendor_category"),
         (row.vendor_email == vendor_event['vendor_email'], "vendor_email"),
-        (abs(row.commission_rate - vendor_event['commission_rate']) < 0.01, "commission_rate"),
+        (abs(float(row.commission_rate) - vendor_event['commission_rate']) < 0.01, "commission_rate"),
         (row.is_current == 1, "is_current"),
     ]
     
@@ -189,27 +189,101 @@ def verify_vendor_data(vendor_event):
     
     return all_passed
 
+def show_recent_orders():
+    """Show the 10 most recent orders with vendor and customer details"""
+    print(f"\n{CYAN}{'='*60}{NC}")
+    print(f"{CYAN}📊 Last 10 Orders (with vendor & customer joins){NC}")
+    print(f"{CYAN}{'='*60}{NC}\n")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT TOP 10
+            o.order_id,
+            o.order_timestamp,
+            c.name AS customer_name,
+            c.city AS customer_city,
+            p.name AS product_name,
+            p.category AS product_category,
+            v.vendor_name,
+            v.vendor_category,
+            o.quantity,
+            o.unit_price,
+            (o.quantity * o.unit_price) AS total_amount,
+            v.commission_rate,
+            ROUND((o.quantity * o.unit_price) * v.commission_rate / 100, 2) AS commission
+        FROM fact_order o
+        LEFT JOIN dim_customer c ON o.customer_id = c.customer_id
+        LEFT JOIN dim_product p ON o.product_id = p.product_id
+        LEFT JOIN dim_vendor v ON o.vendor_id = v.vendor_id AND v.is_current = 1
+        ORDER BY o.order_timestamp DESC
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    if not rows:
+        print(f"{YELLOW}⚠ No orders found in database{NC}")
+        return
+
+    # Print each order
+    for i, row in enumerate(rows, 1):
+        print(f"{CYAN}─────────────────────────────────────────────────────────────{NC}")
+        print(f"  {GREEN}Order #{i}{NC}: {row.order_id}")
+        print(f"  📅 Date: {row.order_timestamp}")
+        print(f"  👤 Customer: {row.customer_name or 'N/A'} ({row.customer_city or 'N/A'})")
+        print(f"  📦 Product: {row.product_name or 'N/A'} [{row.product_category or 'N/A'}]")
+        print(f"  🏪 Vendor: {row.vendor_name or 'N/A'} [{row.vendor_category or 'N/A'}]")
+        unit_price = float(row.unit_price or 0)
+        total_amount = float(row.total_amount or 0)
+        print(f"  💰 {row.quantity or 0} x ${unit_price:.2f} = ${total_amount:.2f}")
+        if row.commission_rate:
+            print(f"  📈 Commission: {float(row.commission_rate):.1f}% = ${float(row.commission or 0):.2f}")
+
+    print(f"{CYAN}─────────────────────────────────────────────────────────────{NC}")
+
+    # Summary stats
+    cursor.execute("""
+        SELECT
+            COUNT(*) as total_orders,
+            COUNT(DISTINCT o.vendor_id) as vendor_count,
+            SUM(o.quantity * o.unit_price) as total_revenue
+        FROM fact_order o
+    """)
+    stats = cursor.fetchone()
+
+    print(f"\n{CYAN}📊 Summary:{NC}")
+    print(f"  Total orders: {stats.total_orders}")
+    print(f"  Active vendors: {stats.vendor_count}")
+    print(f"  Total revenue: ${float(stats.total_revenue or 0):,.2f}")
+
+    conn.close()
+
 def main():
     """Main test function"""
     print(f"\n{CYAN}{'='*60}{NC}")
     print(f"{CYAN}Test: Vendors Stream Processing{NC}")
     print(f"{CYAN}{'='*60}{NC}\n")
-    
+
     # Check if vendors Event Hub exists
     if not check_vendors_eventhub():
         sys.exit(1)
-    
+
     # Send test event
     vendor_event = send_vendor_event()
-    
+
     # Wait for processing
     if not wait_for_processing(vendor_event['vendor_id']):
         sys.exit(1)
-    
+
     # Verify data
     if not verify_vendor_data(vendor_event):
         sys.exit(1)
-    
+
+    # Show recent orders with joins
+    show_recent_orders()
+
     print(f"\n{GREEN}{'='*60}{NC}")
     print(f"{GREEN}✓ All tests passed!{NC}")
     print(f"{GREEN}{'='*60}{NC}\n")

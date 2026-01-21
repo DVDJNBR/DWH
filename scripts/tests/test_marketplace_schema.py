@@ -136,7 +136,7 @@ def main():
     base_report_path = Path(__file__).parent / 'base_schema_report.txt'
     has_base_report = base_report_path.exists()
     if has_base_report:
-        report_lines.append(f"\n🔍 Comparing with base report: {base_reports[-1].name}")
+        report_lines.append(f"\n🔍 Comparing with base report: {base_report_path.name}")
         print(f"{Colors.CYAN}🔍 Found base report for comparison{Colors.NC}\n")
     
     tests_passed = 0

@@ -8,4 +8,6 @@ dependencies = [
     "faker>=20.0.0",
     "python-dotenv>=1.0.0",
     "sh>=2.0.0",
+    "azure-eventhub>=5.11.0",
+    "azure-storage-blob>=12.19.0",
 ]
