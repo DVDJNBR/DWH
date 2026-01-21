@@ -92,7 +92,7 @@ locals {
     INTO [OutputFactOrder]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
-    SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
+    SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id, DATEADD(second, o.timestamp, '1970-01-01') AS event_timestamp
     INTO [OutputStgProduct]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
@@ -112,14 +112,12 @@ QUERY
         FROM [InputOrders] o
         WHERE
             o.order_id IS NOT NULL AND o.customer.id IS NOT NULL AND GetArrayLength(o.items) > 0
-            AND NOT EXISTS (SELECT 1 FROM GetArrayElements(o.items) AS i WHERE i.ArrayValue.product_id IS NULL OR i.ArrayValue.quantity <= 0)
     ),
     QuarantinedOrders AS (
         SELECT *, 'Invalid order data' as reason
         FROM [InputOrders] o
         WHERE
             o.order_id IS NULL OR o.customer.id IS NULL OR GetArrayLength(o.items) <= 0
-            OR EXISTS (SELECT 1 FROM GetArrayElements(o.items) AS i WHERE i.ArrayValue.product_id IS NULL OR i.ArrayValue.quantity <= 0)
     ),
     ValidClickstream AS (
         SELECT * FROM [InputClickstream]
@@ -150,7 +148,7 @@ QUERY
     INTO [OutputFactOrder]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
-    SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
+    SELECT i.ArrayValue.product_id, i.ArrayValue.name, i.ArrayValue.category, COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id, DATEADD(second, o.timestamp, '1970-01-01') AS event_timestamp
     INTO [OutputStgProduct]
     FROM ValidOrders o CROSS APPLY GetArrayElements(o.items) AS i
 
@@ -193,7 +191,8 @@ QUERY
         i.ArrayValue.product_id,
         i.ArrayValue.name,
         i.ArrayValue.category,
-        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
+        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id,
+        DATEADD(second, o.timestamp, '1970-01-01') AS event_timestamp
     INTO
         [OutputStgProduct]
     FROM
@@ -255,7 +254,8 @@ QUERY
         i.ArrayValue.product_id,
         i.ArrayValue.name,
         i.ArrayValue.category,
-        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id
+        COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id,
+        DATEADD(second, o.timestamp, '1970-01-01') AS event_timestamp
     INTO
         [OutputStgProduct]
     FROM
@@ -433,8 +433,9 @@ resource "azurerm_stream_analytics_output_blob" "quarantine_orders" {
   time_format               = "HH"
 
   serialization {
-    type   = "Json"
-    format = "LineSeparated"
+    type     = "Json"
+    format   = "LineSeparated"
+    encoding = "UTF8"
   }
 }
 
@@ -452,8 +453,9 @@ resource "azurerm_stream_analytics_output_blob" "quarantine_clickstream" {
   time_format               = "HH"
 
   serialization {
-    type   = "Json"
-    format = "LineSeparated"
+    type     = "Json"
+    format   = "LineSeparated"
+    encoding = "UTF8"
   }
 }
 
@@ -471,8 +473,9 @@ resource "azurerm_stream_analytics_output_blob" "quarantine_vendors" {
   time_format               = "HH"
 
   serialization {
-    type   = "Json"
-    format = "LineSeparated"
+    type     = "Json"
+    format   = "LineSeparated"
+    encoding = "UTF8"
   }
 }
 
