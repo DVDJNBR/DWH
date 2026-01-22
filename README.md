@@ -4,9 +4,100 @@
 [![Azure](https://img.shields.io/badge/Azure-Cloud-blue)](https://azure.microsoft.com)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform-purple)](https://www.terraform.io/)
 
-Real-time Data Warehouse for e-commerce analytics, deployed on Azure with Terraform.
+Real-time Data Warehouse for e-commerce analytics with multi-vendor marketplace support, deployed on Azure with Terraform.
 
-## 📋 Context
+---
+
+## 🚀 Quick Start
+
+**Prerequisites:** [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli), [Terraform](https://www.terraform.io/downloads) >= 1.0, [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
+
+**Setup:**
+```bash
+git clone https://github.com/DVDJNBR/DWH.git && cd DWH
+cp .env.example .env  # Edit with your Azure credentials
+az login && az account set --subscription "YOUR_SUBSCRIPTION_ID"
+```
+
+**Environment:** Use `ENV=dev` (default, 7-day data, 1-day backup) or `ENV=prod` (30-day data, 7-day backup + geo-replication) on deployment commands.
+
+---
+
+## 🛠️ Deployment Workflow
+
+**Deploy base infrastructure**
+Event Hubs, Stream Analytics, SQL Database, event producers
+```bash
+make deploy
+```
+<sub>Note: adding `ENV=prod` deploys S3 database instead of S0</sub>
+
+**Generate historical data**
+Populate warehouse with realistic orders and clickstream events
+```bash
+make seed
+```
+<sub>Note: adding `ENV=prod` generates 30 days of data instead of 7</sub>
+- `make test-base` to test base schema
+
+**Configure backup & disaster recovery**
+Point-in-Time Restore with automated backups
+```bash
+make recovery-setup
+```
+<sub>Note: adding `ENV=prod` enables 7-day retention + geo-replication instead of 1 day</sub>
+- `make test-backup` to test Point-in-Time Restore
+
+**Add marketplace schema**
+Adds `dim_vendor`, modifies `fact_order` and `dim_product` with `vendor_id`
+```bash
+make update-schema
+```
+- `make test-schema` to test marketplace schema
+
+**Replace Stream Analytics**
+Destroys `asa-shopnow`, creates `asa-shopnow-marketplace` with multi-vendor support
+```bash
+make update-stream
+```
+
+**Enable data quality quarantine**
+Creates Azure Blob Storage for invalid events
+```bash
+make enable-quarantine
+```
+- `make test-quarantine` to test invalid events routing
+
+**Generate realistic vendors**
+Creates 10 vendors with Faker (14 total with migration defaults)
+```bash
+make seed-vendors
+```
+
+**Enable marketplace streaming**
+Adds vendors Event Hub and activates marketplace producer
+```bash
+make stream-new-vendors
+```
+- `make test-vendors-stream` to test vendor event processing
+
+**Enable monitoring**
+Dashboard and automated alerts
+```bash
+make enable-monitoring
+```
+- `make stream-start` / `make stream-stop` to control Stream Analytics job
+
+**Other useful commands:**
+```bash
+make help     # Show all available commands
+make status   # Check Azure resources status
+make destroy  # Destroy all infrastructure
+```
+
+---
+
+## 📋 Project Context
 
 This project is part of a **professional certification program** (E6 - Améliorer, monitorer et maintenir un Data Warehouse). The objective is to **improve, monitor, and maintain** an existing Data Warehouse in a changing business context.
 
@@ -20,60 +111,11 @@ This project is part of a **professional certification program** (E6 - Améliore
 - **Security**: Ensure vendors only access their own data
 
 **Starting point:**
-- Basic Data Warehouse with star schema (`dim_customer`, `dim_product`, `fact_order`, `fact_clickstream`)
+- Basic Data Warehouse with star schema (`dim_customer` (SCD Type 1), `dim_product` (SCD Type 2), `fact_order`, `fact_clickstream`)
 - Real-time ingestion via Azure Event Hubs
 - No backup, monitoring, or security features
 
 **Mission:** Evolve the infrastructure to support the Marketplace model with production-grade features.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-- [Terraform](https://www.terraform.io/downloads) >= 1.0
-- [Docker Hub](https://hub.docker.com/) account
-- [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
-
-### Environment Configuration
-
-The project supports two environments:
-
-**`ENV=dev` (default)** - Development environment
-- Minimal resources to reduce costs
-- SQL Database: S0 (10 DTU)
-- Backup retention: 1 day
-- No geo-replication
-- No long-term retention
-- **Cost**: ~123€/month
-
-**`ENV=prod`** - Production environment
-- Production-grade resources
-- SQL Database: S3 (100 DTU)
-- Backup retention: 7 days
-- Geo-replication enabled
-- Long-term retention: 4W/12M/5Y
-- **Cost**: ~315€/month
-
-💡 **Tip**: Use `dev` for testing and learning, `prod` for realistic production scenarios.
-
-### Initial Setup
-
-```bash
-# Clone repository
-git clone https://github.com/DVDJNBR/DWH.git
-cd DWH
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your Azure credentials
-
-# Login to Azure
-az login
-az account set --subscription "YOUR_SUBSCRIPTION_ID"
-```
 
 ---
 
@@ -82,14 +124,8 @@ az account set --subscription "YOUR_SUBSCRIPTION_ID"
 Deploy the initial Data Warehouse with real-time data pipeline.
 
 ```bash
-make deploy ENV=dev
+make deploy  # ENV=dev by default
 ```
-
-**Environment configuration:**
-- `ENV=dev` (default): Minimal resources to reduce costs (S0 database, 1-day retention)
-- `ENV=prod`: Production-grade resources (S3 database, 7-day retention, geo-backup)
-
-💡 Use `dev` for testing and learning, `prod` for realistic production scenarios.
 
 **What gets deployed:**
 
@@ -127,28 +163,21 @@ make status
 Add production-grade backup and disaster recovery capabilities.
 
 ```bash
-make deploy-backup ENV=prod
+make recovery-setup  # ENV=dev by default
 ```
 
 **What gets added:**
 
 **Short-term backup:**
 - Automated daily backups
-- 7 days retention (prod) / 1 day (dev)
 - Point-in-Time Restore: restore to any moment in the retention period
+- Retention: 1 day (dev) / 7 days (prod)
 
-**Long-term backup (prod only):**
+**Long-term backup (ENV=prod only):**
 - Weekly retention: 4 weeks
 - Monthly retention: 12 months
 - Yearly retention: 5 years
-
-**Geo-replication (prod only):**
-- Backup copy in secondary Azure region
-- Protection against regional failures
-
-**Recovery objectives:**
-- **RTO** (Recovery Time Objective): 4 hours
-- **RPO** (Recovery Point Objective): 1 hour
+- Geo-replication: backup copy in secondary Azure region
 
 **Test the backup:**
 ```bash
@@ -174,7 +203,7 @@ az sql db restore \
 
 ---
 
-## 📦 Phase 3: Marketplace Schema
+## 📦 Phase 3: Marketplace Schema Migration
 
 Extend the Data Warehouse to support multi-vendor marketplace.
 
@@ -188,23 +217,22 @@ make update-schema
 - Vendor information with SCD Type 2 (historical tracking)
 - Fields: vendor_id, name, status, category, commission_rate
 - Tracks vendor evolution over time (valid_from, valid_to, is_current)
+- **SHOPNOW vendor** created automatically (the main store)
 
 **New facts:**
 - `fact_vendor_performance`: KPIs per vendor (orders, revenue, quality metrics)
 - `fact_stock`: Stock levels per vendor and product
 
 **Schema modifications:**
-- `dim_product` extended with `vendor_id` (links products to vendors)
-- Existing products automatically linked to default vendor (SHOPNOW)
+- `dim_product` extended with `vendor_id` (links products to vendors) and now supports **SCD Type 2** for historization.
+- `fact_order` extended with `vendor_id NOT NULL DEFAULT 'SHOPNOW'`
+- Existing products and orders automatically linked to SHOPNOW vendor
+- Indexes created on vendor_id for performance
 
 **Security:**
 - Row-Level Security (RLS) configured for vendor data isolation
 - Vendors can only access their own data
 - Disabled by default (enable manually when ready)
-
-**Sample data:**
-- Default vendor: SHOPNOW (internal)
-- 3 sample vendors for testing (TechStore Pro, Fashion Hub, Home & Garden Plus)
 
 **Test the schema:**
 ```bash
@@ -219,28 +247,250 @@ This validates:
 
 ---
 
-## 🔜 Phase 4: Data Quality (Planned)
+## 🌊 Phase 4: Stream Analytics Marketplace Upgrade
 
-Add data validation and quarantine zone.
+Replace the base Stream Analytics job with the marketplace version that supports multi-vendor tracking.
 
-**Planned features:**
-- Quarantine table for problematic data
-- Validation rules in Stream Analytics
-- Data quality scoring
-- Automated alerts for quality issues
+```bash
+make update-stream
+```
+
+**What happens:**
+
+**Infrastructure change:**
+- **Destroys**: `asa-shopnow` (base stream)
+- **Creates**: `asa-shopnow-marketplace` (new marketplace stream)
+
+**Why replace instead of update?**
+- Simulates a real production migration where the marketplace wasn't planned initially
+- The base stream inserts `vendor_id = 'SHOPNOW'` (hardcoded)
+- The marketplace stream uses `COALESCE(vendor_id, 'SHOPNOW')` to support both:
+  - ShopNow orders → `vendor_id = 'SHOPNOW'`
+  - Marketplace orders → `vendor_id` from event data
+
+**Query differences:**
+
+*Base stream (before):*
+```sql
+SELECT
+    order_id, product_id, customer_id, quantity, unit_price,
+    'SHOPNOW' AS vendor_id  -- Hardcoded
+INTO [OutputFactOrder]
+FROM [InputOrders]
+```
+
+*Marketplace stream (after):*
+```sql
+SELECT
+    order_id, product_id, customer_id, quantity, unit_price,
+    COALESCE(i.ArrayValue.vendor_id, 'SHOPNOW') AS vendor_id  -- Dynamic
+INTO [OutputFactOrder]
+FROM [InputOrders]
+```
+
+**New capabilities:**
+- Processes orders from multiple vendors
+- Automatically assigns SHOPNOW to events without vendor_id
+- Prepares infrastructure for marketplace producer
 
 ---
 
-## 🔜 Phase 5: Monitoring & Alerting (Planned)
+## 🏪 Phase 5: Vendor Data Generation
 
-Add observability and automated alerting.
+Generate realistic vendor data for testing.
 
-**Planned features:**
-- Log Analytics Workspace
-- Application Insights
-- Automated alerts (errors, latency, resource usage)
-- Monitoring dashboard
-- Key metrics tracking
+```bash
+make seed-vendors
+```
+
+**What gets created:**
+
+**Sample vendors (10 by default):**
+- Realistic company names (using Faker)
+- Valid email addresses
+- Random categories (electronics, fashion, home, sports, books, toys, food)
+- Commission rates between 10-25%
+- Mix of active (80%) and pending (20%) statuses
+
+**Total vendors after this step:**
+- 1 × SHOPNOW (official store)
+- 3 × Test vendors (V001, V002, V003 - created by migration)
+- 10 × Generated vendors
+- **Total: 14 vendors**
+
+**Custom generation:**
+```bash
+# Generate 50 vendors instead of 10
+uv run --directory scripts python seed_vendors.py --count 50
+```
+
+---
+
+## 🚀 Phase 6: Marketplace Event Streaming
+
+Enable real-time marketplace order generation with multi-vendor support.
+
+```bash
+make stream-new-vendors  # ENV=dev by default
+```
+
+**What gets added:**
+
+**New Event Hub: `vendors`**
+- Dedicated stream for vendor events (creation, updates, status changes)
+- Integrated with existing Event Hub namespace
+
+**Stream Analytics updates:**
+- New input: `InputVendors`
+- New output: `OutputDimVendor`
+- Query extended to process vendor events in real-time
+
+**Marketplace Producer:**
+- Single unified producer handles all vendors (including SHOPNOW)
+- Reads active vendors from `dim_vendor` (SQL query)
+- Generates orders with random `vendor_id` from all active vendors
+- **Auto-refresh**: Re-reads vendor list every 5 minutes
+- Interval: 90 seconds per order
+
+**Event flow:**
+```
+Marketplace Producer
+    ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = SHOPNOW, V001, V002, etc.)
+    └─> Event Hub (vendors) → Stream Analytics → stg_vendor → dim_vendor (SCD Type 2)
+```
+
+**Marketplace order format:**
+```json
+{
+  "order_id": "uuid",
+  "customer": {...},
+  "items": [
+    {
+      "product_id": "uuid",
+      "name": "Product Name",
+      "vendor_id": "V001",
+      "quantity": 2,
+      "unit_price": 99.99
+    }
+  ],
+  "source": "marketplace"
+}
+```
+
+**Test the streaming:**
+```bash
+make test-vendors-stream
+```
+
+This will:
+1. Verify vendors Event Hub exists
+2. Send a test vendor event
+3. Wait for Stream Analytics to process it
+4. Verify the vendor appears in `dim_vendor`
+5. Validate all fields are correct
+6. Display last 10 orders with vendor/customer/product joins
+
+**Sample output:**
+```
+─────────────────────────────────────────────────────────────
+  Order #1: abc123-def456
+  📅 Date: 2026-01-21 10:15:30
+  👤 Customer: John Smith (Paris)
+  📦 Product: Wireless Headphones [Electronics]
+  🏪 Vendor: TechStore Pro [electronics]
+  💰 2 x $149.99 = $299.98
+  📈 Commission: 15.0% = $45.00
+─────────────────────────────────────────────────────────────
+```
+
+---
+
+## 📦 Phase 7: Product Historization (SCD Type 2)
+
+This step enhances the `dim_product` dimension to track its full history, enabling more powerful temporal analysis. This is an example of iterative improvement on the data warehouse after the initial marketplace launch.
+
+The necessary database changes for this are included in the main `update-schema` command.
+
+```bash
+make update-schema
+```
+
+**What gets added:**
+
+- **`dim_product` becomes SCD Type 2**: The table is modified to include `valid_from`, `valid_to`, and `is_current` columns to track changes.
+- **Staging & Processing**: A new `stg_product` table and a stored procedure (`sp_merge_product_scd2`) are created to automatically process incoming data and apply the SCD2 logic.
+
+**Test the implementation:**
+```bash
+make test-scd2-product
+```
+
+---
+
+## ✅ Phase 8: Data Quality (Quarantine)
+
+Add data validation and quarantine zone for invalid events.
+
+```bash
+make enable-quarantine
+```
+
+**What gets added:**
+
+**Quarantine Storage:**
+- Azure Blob Storage container for quarantined data
+- Separate containers for orders, clickstream, and vendors
+
+**Stream Analytics validation:**
+- Real-time validation of incoming events
+- Invalid data routed to quarantine instead of dropping
+- Validation rules: null checks, required fields, data types
+
+**Quarantine outputs:**
+- `QuarantineOrders`: Invalid order events
+- `QuarantineClickstream`: Invalid clickstream events
+- `QuarantineVendors`: Invalid vendor events
+
+**Test the quarantine:**
+```bash
+make test-quarantine
+```
+
+This will:
+1. Send invalid events (null order_id, null session_id)
+2. Wait for Stream Analytics to process
+3. Verify events arrive in quarantine blob storage
+4. Confirm they're NOT in the SQL database
+
+---
+
+## ✅ Phase 9: Monitoring & Alerting
+
+Add observability dashboard and automated alerting.
+
+```bash
+make enable-monitoring
+```
+
+**What gets added:**
+
+**Azure Dashboard:**
+- Real-time monitoring of Stream Analytics job
+- Metrics: SU utilization, input/output events, errors, watermark delay
+- Direct links to Event Hubs and SQL Database
+
+**Action Group:**
+- Email notifications for critical alerts
+- Configurable alert email in `terraform.tfvars`
+
+**Alert Rules:**
+- `alert-asa-job-failed`: Triggers when Stream Analytics has errors (Severity 1)
+- `alert-asa-job-stopped`: Triggers when job stops running (Severity 0 - Critical)
+
+**Dashboard URL:**
+```
+https://portal.azure.com/#@/dashboard/arm/.../dwh-main-dashboard
+```
 
 ---
 
@@ -279,65 +529,43 @@ ORDER BY revenue DESC;
 
 ---
 
-## 🛠️ Available Commands
-
-```bash
-make help              # Show all available commands
-make init              # Initialize Terraform
-make plan              # Show deployment plan
-make deploy            # Deploy base infrastructure (ENV=dev by default)
-make recovery-setup    # Configure backup & disaster recovery (incremental)
-make update-schema     # Add marketplace tables (incremental)
-make status            # Check resources status
-make seed              # Generate historical data (30 days)
-make seed-quick        # Generate historical data (7 days)
-make test-base         # Test base schema
-make test-schema       # Test marketplace schema
-make test-backup       # Test Point-in-Time Restore
-make destroy           # Destroy infrastructure
-```
-
-**Environment examples:**
-```bash
-make deploy                    # Development (default)
-make deploy ENV=prod           # Production
-
-make recovery-setup            # Backup in dev (default)
-make recovery-setup ENV=prod   # Backup in prod (full features)
-```
-
-**Incremental workflow:**
-```bash
-make deploy              # 1. Base infrastructure (dev by default)
-make seed                # 2. Historical data
-make recovery-setup      # 3. Add backup (without redeploying)
-make update-schema       # 4. Add marketplace tables (without redeploying)
-make test-schema         # 5. Validate changes
-```
-
----
-
 ## 📁 Project Structure
 
 ```
 .
-├── terraform/              # Infrastructure as Code
-│   ├── main.tf            # Main configuration
-│   ├── variables.tf       # Variables
-│   ├── locals.tf          # Environment-based logic
-│   ├── dwh_schema.sql     # SQL schema
-│   └── modules/           # Terraform modules
-│       ├── event_hubs/
-│       ├── sql_database/
-│       ├── stream_analytics/
-│       └── container_producers/
-├── data-generator/        # Event data generator
-│   ├── producers.py
+├── terraform/                    # Infrastructure as Code
+│   ├── main.tf                  # Main configuration
+│   ├── variables.tf             # Variables
+│   ├── locals.tf                # Environment-based logic
+│   ├── dwh_schema.sql           # SQL schema
+│   └── modules/
+│       ├── event_hubs/          # Event Hub namespace and hubs
+│       ├── sql_database/        # SQL Server and database
+│       ├── stream_analytics/    # ASA job, inputs, outputs, alerts
+│       ├── container_producers/ # Container Instance for producers
+│       ├── action_group/        # Alert notification group
+│       └── dashboard/           # Azure monitoring dashboard
+├── data-generator/              # Event data generator
+│   ├── producers.py             # Base producer (legacy)
+│   ├── producers_marketplace.py # Marketplace producer (active)
+│   ├── supervisord.conf         # Process manager config
 │   └── Dockerfile
-├── scripts/               # Utility scripts
+├── scripts/                     # Utility scripts
 │   ├── seed_historical_data.py
-│   └── test_backup_restore.py
-├── Makefile              # Simplified commands
+│   ├── seed_vendors.py
+│   ├── migrations/              # SQL migrations
+│   │   ├── 001_add_marketplace_tables.sql
+│   │   └── 002_implement_scd2_vendor.sql
+│   └── tests/                   # Test scripts
+│       ├── test_base_schema.py
+│       ├── test_marketplace_schema.py
+│       ├── test_backup_quick.py
+│       ├── test_vendors_stream.py
+│       └── test_quarantine.py
+├── docs/                        # Documentation
+│   ├── monitoring.md            # Monitoring & alerts guide
+│   └── stories/                 # Development stories
+├── Makefile                     # Simplified commands
 └── README.md
 ```
 
@@ -347,10 +575,10 @@ make test-schema         # 5. Validate changes
 
 - Secrets stored in `.env` (not committed)
 - Encrypted connections (TLS/SSL)
-- SQL firewall configured
+- SQL firewall dynamically configured with your public IP
 - Managed Identity for containers
 
-⚠️ **Note**: Current firewall allows all IPs (0.0.0.0/0) for development. Restrict in production.
+> **Note:** The firewall rule `AllowLocalIP` is automatically updated with your current public IPv4 address during deployment.
 
 ---
 
@@ -373,9 +601,13 @@ az monitor activity-log list \
 
 - **Event Hubs**: Incoming/outgoing messages, errors
 - **Stream Analytics**: Processed events, latency, errors
-- **SQL Database**: DTU usage, connections, size
+### Current Test Coverage
 
----
+- **Base Verification**: `make test-base` (Schema validation)
+- **Backup Verification**: `make test-backup` (DR validation - C16/C14)
+- **Marketplace Verification**: `make test-schema` (Validation of new model - C13/C17)
+- **Vendor SCD2 Verification**: `make test-scd2-vendor` (SCD Type 2 validation for vendors)
+- **Product SCD2 Verification**: `make test-scd2-product` (SCD Type 2 validation for products)
 
 ## 👤 Author
 
@@ -384,5 +616,3 @@ az monitor activity-log list \
 - Email: d4v1dbr34u@gmail.com
 
 ---
-
-⭐ If this project helped you, feel free to give it a star!
