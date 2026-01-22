@@ -516,9 +516,9 @@ resource "azurerm_monitor_metric_alert" "asa_job_failed" {
   name                = "alert-asa-job-failed"
   resource_group_name = var.resource_group_name
   scopes              = [local.active_job_id]
-  description         = "Alert when Stream Analytics job fails or has runtime errors"
+  description         = "Alert when Stream Analytics job fails or has significant runtime errors"
   severity            = 1
-  frequency           = "PT5M"
+  frequency           = "PT1M"
   window_size         = "PT5M"
 
   criteria {
@@ -526,7 +526,7 @@ resource "azurerm_monitor_metric_alert" "asa_job_failed" {
     metric_name      = "Errors"
     aggregation      = "Total"
     operator         = "GreaterThan"
-    threshold        = 0
+    threshold        = 5
   }
 
   action {
@@ -536,19 +536,17 @@ resource "azurerm_monitor_metric_alert" "asa_job_failed" {
   tags = var.tags
 }
 
-resource "azurerm_monitor_activity_log_alert" "asa_job_stop_or_fail" {
+resource "azurerm_monitor_activity_log_alert" "asa_job_health" {
   count               = var.enable_monitoring ? 1 : 0
-  name                = "alert-asa-job-stop-or-fail"
+  name                = "alert-asa-job-health"
   resource_group_name = var.resource_group_name
   location            = "global"
   scopes              = [var.resource_group_id]
-  description         = "Alert when Stream Analytics job stops or fails"
+  description         = "Alert on unexpected Stream Analytics job health issues (Unavailable/Degraded)"
 
   criteria {
-    resource_id    = local.active_job_id
-    operation_name = "Microsoft.StreamAnalytics/streamingjobs/stop/action"
-    category       = "Administrative"
-    status         = "Succeeded"
+    resource_id = local.active_job_id
+    category    = "ResourceHealth"
   }
 
   action {
