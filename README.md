@@ -13,6 +13,7 @@ Real-time Data Warehouse for e-commerce analytics with multi-vendor marketplace 
 **Prerequisites:** [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli), [Terraform](https://www.terraform.io/downloads) >= 1.0, [Python](https://www.python.org/) >= 3.10 with [uv](https://github.com/astral-sh/uv)
 
 **Setup:**
+
 ```bash
 git clone https://github.com/DVDJNBR/DWH.git && cd DWH
 cp .env.example .env  # Edit with your Azure credentials
@@ -27,68 +28,90 @@ az login && az account set --subscription "YOUR_SUBSCRIPTION_ID"
 
 **Deploy base infrastructure**
 Event Hubs, Stream Analytics, SQL Database, event producers
+
 ```bash
 make deploy
 ```
+
 <sub>Note: adding `ENV=prod` deploys S3 database instead of S0</sub>
 
 **Generate historical data**
 Populate warehouse with realistic orders and clickstream events
+
 ```bash
 make seed
 ```
+
 <sub>Note: adding `ENV=prod` generates 30 days of data instead of 7</sub>
+
 - `make test-base` to test base schema
 
 **Configure backup & disaster recovery**
 Point-in-Time Restore with automated backups
+
 ```bash
 make recovery-setup
 ```
+
 <sub>Note: adding `ENV=prod` enables 7-day retention + geo-replication instead of 1 day</sub>
+
 - `make test-backup` to test Point-in-Time Restore
 
 **Add marketplace schema**
 Adds `dim_vendor`, modifies `fact_order` and `dim_product` with `vendor_id`
+
 ```bash
 make update-schema
 ```
+
 - `make test-schema` to test marketplace schema
 
 **Replace Stream Analytics**
 Destroys `asa-shopnow`, creates `asa-shopnow-marketplace` with multi-vendor support
+
 ```bash
 make update-stream
 ```
 
+- `make test-marketplace-stream` to test marketplace stream configuration
+
 **Enable data quality quarantine**
 Creates Azure Blob Storage for invalid events
+
 ```bash
 make enable-quarantine
 ```
+
 - `make test-quarantine` to test invalid events routing
 
 **Generate realistic vendors**
 Creates 10 vendors with Faker (14 total with migration defaults)
+
 ```bash
 make seed-vendors
 ```
 
 **Enable marketplace streaming**
 Adds vendors Event Hub and activates marketplace producer
+
 ```bash
 make stream-new-vendors
 ```
+
 - `make test-vendors-stream` to test vendor event processing
+- `make test-marketplace-stream` to test Stream Analytics marketplace configuration
 
 **Enable monitoring**
 Dashboard and automated alerts
+
 ```bash
 make enable-monitoring
 ```
+
 - `make stream-start` / `make stream-stop` to control Stream Analytics job
 
 **Other useful commands:**
+
 ```bash
 make help     # Show all available commands
 make status   # Check Azure resources status
@@ -111,6 +134,7 @@ This project is part of a **professional certification program** (E6 - Améliore
 - **Security**: Ensure vendors only access their own data
 
 **Starting point:**
+
 - Basic Data Warehouse with star schema (`dim_customer` (SCD Type 1), `dim_product` (SCD Type 2), `fact_order`, `fact_clickstream`)
 - Real-time ingestion via Azure Event Hubs
 - No backup, monitoring, or security features
@@ -140,18 +164,21 @@ Azure SQL Database (Data Warehouse)
 ```
 
 **Components:**
+
 - **Event Hubs**: Ingests real-time events (orders, clickstream)
 - **Stream Analytics**: Transforms and routes data to the warehouse
 - **SQL Database**: Stores data in star schema (dimensions + facts)
 - **Container Instances**: Generates realistic event data for testing
 
 **Data Model:**
+
 - `dim_customer`: Customer information
 - `dim_product`: Product catalog
 - `fact_order`: Orders and transactions
 - `fact_clickstream`: User navigation events
 
 **Check deployment:**
+
 ```bash
 make status
 ```
@@ -169,22 +196,26 @@ make recovery-setup  # ENV=dev by default
 **What gets added:**
 
 **Short-term backup:**
+
 - Automated daily backups
 - Point-in-Time Restore: restore to any moment in the retention period
 - Retention: 1 day (dev) / 7 days (prod)
 
 **Long-term backup (ENV=prod only):**
+
 - Weekly retention: 4 weeks
 - Monthly retention: 12 months
 - Yearly retention: 5 years
 - Geo-replication: backup copy in secondary Azure region
 
 **Test the backup:**
+
 ```bash
 make test-backup
 ```
 
 This command will:
+
 1. Count current data
 2. Delete some records (simulation)
 3. Restore database to a previous point in time
@@ -192,6 +223,7 @@ This command will:
 5. Generate a detailed report
 
 **Manual restore example:**
+
 ```bash
 az sql db restore \
   --resource-group rg-e6-dbreau \
@@ -214,32 +246,38 @@ make update-schema
 **What gets added:**
 
 **New dimension: `dim_vendor`**
+
 - Vendor information with SCD Type 2 (historical tracking)
 - Fields: vendor_id, name, status, category, commission_rate
 - Tracks vendor evolution over time (valid_from, valid_to, is_current)
 - **SHOPNOW vendor** created automatically (the main store)
 
 **New facts:**
+
 - `fact_vendor_performance`: KPIs per vendor (orders, revenue, quality metrics)
 - `fact_stock`: Stock levels per vendor and product
 
 **Schema modifications:**
+
 - `dim_product` extended with `vendor_id` (links products to vendors) and now supports **SCD Type 2** for historization.
 - `fact_order` extended with `vendor_id NOT NULL DEFAULT 'SHOPNOW'`
 - Existing products and orders automatically linked to SHOPNOW vendor
 - Indexes created on vendor_id for performance
 
 **Security:**
+
 - Row-Level Security (RLS) configured for vendor data isolation
 - Vendors can only access their own data
 - Disabled by default (enable manually when ready)
 
 **Test the schema:**
+
 ```bash
 make test-schema
 ```
 
 This validates:
+
 - All tables exist and are accessible
 - Indexes are created for performance
 - Data integrity (foreign keys, relationships)
@@ -255,13 +293,21 @@ Replace the base Stream Analytics job with the marketplace version that supports
 make update-stream
 ```
 
+**Test the stream:**
+
+```bash
+make test-marketplace-stream
+```
+
 **What happens:**
 
 **Infrastructure change:**
+
 - **Destroys**: `asa-shopnow` (base stream)
 - **Creates**: `asa-shopnow-marketplace` (new marketplace stream)
 
 **Why replace instead of update?**
+
 - Simulates a real production migration where the marketplace wasn't planned initially
 - The base stream inserts `vendor_id = 'SHOPNOW'` (hardcoded)
 - The marketplace stream uses `COALESCE(vendor_id, 'SHOPNOW')` to support both:
@@ -270,7 +316,8 @@ make update-stream
 
 **Query differences:**
 
-*Base stream (before):*
+_Base stream (before):_
+
 ```sql
 SELECT
     order_id, product_id, customer_id, quantity, unit_price,
@@ -279,7 +326,8 @@ INTO [OutputFactOrder]
 FROM [InputOrders]
 ```
 
-*Marketplace stream (after):*
+_Marketplace stream (after):_
+
 ```sql
 SELECT
     order_id, product_id, customer_id, quantity, unit_price,
@@ -289,6 +337,7 @@ FROM [InputOrders]
 ```
 
 **New capabilities:**
+
 - Processes orders from multiple vendors
 - Automatically assigns SHOPNOW to events without vendor_id
 - Prepares infrastructure for marketplace producer
@@ -306,6 +355,7 @@ make seed-vendors
 **What gets created:**
 
 **Sample vendors (10 by default):**
+
 - Realistic company names (using Faker)
 - Valid email addresses
 - Random categories (electronics, fashion, home, sports, books, toys, food)
@@ -313,12 +363,14 @@ make seed-vendors
 - Mix of active (80%) and pending (20%) statuses
 
 **Total vendors after this step:**
+
 - 1 × SHOPNOW (official store)
 - 3 × Test vendors (V001, V002, V003 - created by migration)
 - 10 × Generated vendors
 - **Total: 14 vendors**
 
 **Custom generation:**
+
 ```bash
 # Generate 50 vendors instead of 10
 uv run --directory scripts python seed_vendors.py --count 50
@@ -337,15 +389,18 @@ make stream-new-vendors  # ENV=dev by default
 **What gets added:**
 
 **New Event Hub: `vendors`**
+
 - Dedicated stream for vendor events (creation, updates, status changes)
 - Integrated with existing Event Hub namespace
 
 **Stream Analytics updates:**
+
 - New input: `InputVendors`
 - New output: `OutputDimVendor`
 - Query extended to process vendor events in real-time
 
 **Marketplace Producer:**
+
 - Single unified producer handles all vendors (including SHOPNOW)
 - Reads active vendors from `dim_vendor` (SQL query)
 - Generates orders with random `vendor_id` from all active vendors
@@ -353,6 +408,7 @@ make stream-new-vendors  # ENV=dev by default
 - Interval: 90 seconds per order
 
 **Event flow:**
+
 ```
 Marketplace Producer
     ├─> Event Hub (orders) → Stream Analytics → fact_order (vendor_id = SHOPNOW, V001, V002, etc.)
@@ -360,6 +416,7 @@ Marketplace Producer
 ```
 
 **Marketplace order format:**
+
 ```json
 {
   "order_id": "uuid",
@@ -378,11 +435,13 @@ Marketplace Producer
 ```
 
 **Test the streaming:**
+
 ```bash
 make test-vendors-stream
 ```
 
 This will:
+
 1. Verify vendors Event Hub exists
 2. Send a test vendor event
 3. Wait for Stream Analytics to process it
@@ -391,6 +450,7 @@ This will:
 6. Display last 10 orders with vendor/customer/product joins
 
 **Sample output:**
+
 ```
 ─────────────────────────────────────────────────────────────
   Order #1: abc123-def456
@@ -421,6 +481,7 @@ make update-schema
 - **Staging & Processing**: A new `stg_product` table and a stored procedure (`sp_merge_product_scd2`) are created to automatically process incoming data and apply the SCD2 logic.
 
 **Test the implementation:**
+
 ```bash
 make test-scd2-product
 ```
@@ -438,25 +499,30 @@ make enable-quarantine
 **What gets added:**
 
 **Quarantine Storage:**
+
 - Azure Blob Storage container for quarantined data
 - Separate containers for orders, clickstream, and vendors
 
 **Stream Analytics validation:**
+
 - Real-time validation of incoming events
 - Invalid data routed to quarantine instead of dropping
 - Validation rules: null checks, required fields, data types
 
 **Quarantine outputs:**
+
 - `QuarantineOrders`: Invalid order events
 - `QuarantineClickstream`: Invalid clickstream events
 - `QuarantineVendors`: Invalid vendor events
 
 **Test the quarantine:**
+
 ```bash
 make test-quarantine
 ```
 
 This will:
+
 1. Send invalid events (null order_id, null session_id)
 2. Wait for Stream Analytics to process
 3. Verify events arrive in quarantine blob storage
@@ -475,19 +541,23 @@ make enable-monitoring
 **What gets added:**
 
 **Azure Dashboard:**
+
 - Real-time monitoring of Stream Analytics job
 - Metrics: SU utilization, input/output events, errors, watermark delay
 - Direct links to Event Hubs and SQL Database
 
 **Action Group:**
+
 - Email notifications for critical alerts
 - Configurable alert email in `terraform.tfvars`
 
 **Alert Rules:**
+
 - `alert-asa-job-failed`: Triggers when Stream Analytics has errors (Severity 1)
 - `alert-asa-job-stopped`: Triggers when job stops running (Severity 0 - Critical)
 
 **Dashboard URL:**
+
 ```
 https://portal.azure.com/#@/dashboard/arm/.../dwh-main-dashboard
 ```
@@ -515,9 +585,10 @@ terraform -chdir=terraform output sql_database_name
 ```
 
 **Example query:**
+
 ```sql
 -- Top 10 best-selling products
-SELECT 
+SELECT
     p.name,
     COUNT(o.order_id) as total_orders,
     SUM(o.quantity * o.unit_price) as revenue
@@ -601,17 +672,20 @@ az monitor activity-log list \
 
 - **Event Hubs**: Incoming/outgoing messages, errors
 - **Stream Analytics**: Processed events, latency, errors
+
 ### Current Test Coverage
 
 - **Base Verification**: `make test-base` (Schema validation)
 - **Backup Verification**: `make test-backup` (DR validation - C16/C14)
 - **Marketplace Verification**: `make test-schema` (Validation of new model - C13/C17)
+- **Marketplace Stream Verification**: `make test-marketplace-stream` (Stream Analytics configuration validation)
 - **Vendor SCD2 Verification**: `make test-scd2-vendor` (SCD Type 2 validation for vendors)
 - **Product SCD2 Verification**: `make test-scd2-product` (SCD Type 2 validation for products)
 
 ## 👤 Author
 
 **David Breau**
+
 - GitHub: [@DVDJNBR](https://github.com/DVDJNBR)
 - Email: d4v1dbr34u@gmail.com
 

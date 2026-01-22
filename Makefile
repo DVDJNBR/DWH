@@ -1,5 +1,8 @@
 .PHONY: help init plan apply deploy destroy clean status logs start stop validate fmt check
 
+# Auto-detect active Azure subscription from az CLI
+export ARM_SUBSCRIPTION_ID ?= $(shell az account show --query id -o tsv 2>/dev/null)
+
 # Variables
 TERRAFORM_DIR := terraform
 RESOURCE_GROUP := rg-e6-dbreau
@@ -46,6 +49,9 @@ status: ## Show Azure resources status
 
 deploy: ## [1] Deploy base infrastructure (ENV=dev by default)
 	@echo "$(GREEN)🚀 Deploying base infrastructure (ENV=$(ENV))...$(NC)"
+	@echo "$(CYAN)🔄 Initializing Terraform with active subscription...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform init -reconfigure
+	@echo "$(GREEN)✅ Terraform initialized$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve -var="environment=$(ENV)"
 
 seed: ## [2] Generate historical data (ENV=dev: 7 days, ENV=prod: 30 days)
@@ -159,6 +165,10 @@ test-backup-full: ## Test Point-in-Time Restore (slow, full restore)
 test-vendors-stream: ## Test vendor events streaming
 	@echo "$(GREEN)🧪 Testing vendor streaming...$(NC)"
 	@uv run --directory scripts python tests/test_vendors_stream.py
+
+test-marketplace-stream: ## Test Stream Analytics marketplace configuration
+	@echo "$(GREEN)🧪 Testing marketplace stream...$(NC)"
+	@uv run --directory scripts python tests/test_marketplace_stream.py
 
 test-scd2-vendor: ## Test SCD Type 2 implementation for vendors
 	@echo "$(GREEN)🧪 Testing SCD Type 2 for vendors...$(NC)"

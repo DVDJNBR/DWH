@@ -1,6 +1,7 @@
 variable "subscription_id" {
-  description = "Azure subscription ID"
+  description = "Azure subscription ID (optional - uses active az CLI subscription if not provided)"
   type        = string
+  default     = null  # Uses active subscription from az CLI
 }
 
 variable "username" {
