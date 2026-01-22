@@ -32,8 +32,16 @@ def apply_migration(migration_number):
     
     print(f"📊 Connecting to {server} / {database}")
     
-    # Read migration file
-    migration_file = Path(__file__).parent / f"{migration_number}_add_marketplace_tables.sql"
+    # Find migration file by number
+    migrations_dir = Path(__file__).parent
+    migration_files = list(migrations_dir.glob(f"{migration_number}_*.sql"))
+
+    if not migration_files:
+        print(f"❌ No migration file found starting with: {migration_number}_")
+        print(f"📂 Looking in: {migrations_dir}")
+        sys.exit(1)
+
+    migration_file = migration_files[0]
     
     if not migration_file.exists():
         print(f"❌ Migration file not found: {migration_file}")

@@ -35,3 +35,63 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_marketplace" {
+  description = "Enable marketplace features (vendors streaming)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_quarantine" {
+  description = "Enable data quarantine for invalid events"
+  type        = bool
+  default     = false
+}
+
+variable "quarantine_storage_account_name" {
+  description = "The name of the storage account to use for quarantine"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_storage_account_key" {
+  description = "The access key for the quarantine storage account"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "quarantine_container_orders" {
+  description = "The name of the container for quarantined orders"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_container_clickstream" {
+  description = "The name of the container for quarantined clickstream events"
+  type        = string
+  default     = ""
+}
+
+variable "quarantine_container_vendors" {
+  description = "The name of the container for quarantined vendors"
+  type        = string
+  default     = ""
+}
+
+variable "enable_monitoring" {
+  description = "Enable monitoring alerts for Stream Analytics"
+  type        = bool
+  default     = false
+}
+
+variable "action_group_id" {
+  description = "The ID of the Action Group for alerts"
+  type        = string
+  default     = ""
+}
+
+variable "resource_group_id" {
+  description = "The ID of the Resource Group for activity log alerts"
+  type        = string
+}

@@ -31,4 +31,11 @@ locals {
   
   # Long-term retention based on environment and backup feature
   enable_long_term_retention = var.environment == "prod" && var.enable_backup
+  
+  # ============================================================================
+  # Marketplace feature configuration
+  # ============================================================================
+  
+  # Event Hubs list - add vendors when marketplace is enabled
+  eventhubs = var.enable_marketplace ? ["orders", "clickstream", "vendors"] : ["orders", "clickstream"]
 }

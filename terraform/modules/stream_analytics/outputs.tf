@@ -1,7 +1,7 @@
 output "job_name" {
-  value = azurerm_stream_analytics_job.asa_job.name
+  value = local.active_job_name
 }
 
 output "job_id" {
-  value = azurerm_stream_analytics_job.asa_job.id
+  value = local.active_job_id
 }
