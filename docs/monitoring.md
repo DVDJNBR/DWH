@@ -35,13 +35,13 @@ Two alert rules are configured to detect issues:
 
 - **Target**: The active Stream Analytics job
 - **Severity**: 1 (Error)
-- **Condition**: Triggers when the "Errors" metric is greater than 0 over a 5-minute period
+- **Condition**: Triggers when the "Errors" metric is **greater than 5** over a 5-minute period (filters out transient noise)
 - **Action**: Sends an email notification to the configured admin email
 
-#### 2. Job Stopped/Failed Alert (`alert-asa-job-stop-or-fail`)
+#### 2. Job Health Alert (`alert-asa-job-health`)
 
-- **Target**: Administrative operations on the job
-- **Condition**: Triggers when a "Stop" operation or a job failure is recorded in the Azure Activity Log.
+- **Target**: The active Stream Analytics job
+- **Condition**: Triggers when the Resource Health status is **Unavailable** or **Degraded** (detects unexpected issues while ignoring intentional manual stops).
 - **Action**: Sends an email notification to the configured admin email
 
 ## 3. Deployment
