@@ -168,6 +168,10 @@ test-vendors-stream: ## Test vendor events streaming
 	@echo "$(GREEN)🧪 Testing vendor streaming...$(NC)"
 	@uv run --directory scripts python tests/test_vendors_stream.py
 
+test-marketplace-stream: ## Test Stream Analytics marketplace configuration
+	@echo "$(GREEN)🧪 Testing marketplace stream...$(NC)"
+	@uv run --directory scripts python tests/test_marketplace_stream.py
+
 test-scd2-vendor: ## Test SCD Type 2 implementation for vendors
 	@echo "$(GREEN)🧪 Testing SCD Type 2 for vendors...$(NC)"
 	@uv run --directory scripts python tests/test_scd2_vendor.py
