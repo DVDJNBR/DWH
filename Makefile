@@ -1,5 +1,8 @@
 .PHONY: help init plan apply deploy destroy clean status logs start stop validate fmt check
 
+# Auto-detect active Azure subscription from az CLI
+export ARM_SUBSCRIPTION_ID ?= $(shell az account show --query id -o tsv 2>/dev/null)
+
 # Variables
 TERRAFORM_DIR := terraform
 RESOURCE_GROUP := rg-e6-dbreau
