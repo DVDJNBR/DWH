@@ -15,5 +15,7 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = var.subscription_id
+  # Automatically uses the active subscription from "az login"
+  # This makes the project portable across different Azure accounts/subscriptions
 }
+
