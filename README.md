@@ -73,6 +73,8 @@ Destroys `asa-shopnow`, creates `asa-shopnow-marketplace` with multi-vendor supp
 make update-stream
 ```
 
+- `make test-marketplace-stream` to test marketplace stream configuration
+
 **Enable data quality quarantine**
 Creates Azure Blob Storage for invalid events
 
@@ -289,6 +291,12 @@ Replace the base Stream Analytics job with the marketplace version that supports
 
 ```bash
 make update-stream
+```
+
+**Test the stream:**
+
+```bash
+make test-marketplace-stream
 ```
 
 **What happens:**
