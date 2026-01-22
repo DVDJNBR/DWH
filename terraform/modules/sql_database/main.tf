@@ -1,3 +1,7 @@
+data "http" "myip" {
+  url = "https://api.ipify.org"
+}
+
 resource "azurerm_mssql_server" "sql_server" {
   name                         = "sql-${var.unique_name}"
   resource_group_name          = var.resource_group_name
@@ -55,8 +59,8 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
 resource "azurerm_mssql_firewall_rule" "allow_local_ip" {
   name             = "AllowLocalIP"
   server_id        = azurerm_mssql_server.sql_server.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "255.255.255.255"
+  start_ip_address = chomp(data.http.myip.response_body)
+  end_ip_address   = chomp(data.http.myip.response_body)
 }
 
 // ============================================================================
