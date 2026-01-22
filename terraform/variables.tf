@@ -90,3 +90,21 @@ variable "enable_security" {
   type        = bool
   default     = false
 }
+
+variable "enable_marketplace" {
+  description = "Enable marketplace features (vendors streaming)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_quarantine" {
+  description = "Enable data quality quarantine zone (Blob Storage)"
+  type        = bool
+  default     = false
+}
+
+variable "alert_email" {
+  description = "Email address for critical alerts."
+  type        = string
+  default     = "dbreau.ext@simplonformations.co"
+}

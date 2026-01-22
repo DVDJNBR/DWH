@@ -219,8 +219,8 @@ Success rate: {success_rate:.1f}%
     report_lines.append("=" * 70)
     report_lines.append(summary)
     
-    # Save report
-    report_file = f"base_schema_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    # Save report (overwrite previous)
+    report_file = Path(__file__).parent / "base_schema_report.txt"
     with open(report_file, 'w') as f:
         f.write('\n'.join(report_lines))
     
