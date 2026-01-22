@@ -101,23 +101,41 @@ def insert_customers(conn, customers):
     print("✅ Clients insérés")
 
 def insert_products(conn, products):
-    """Insère les produits dans stg_product."""
-    print(f"📦 Insertion de {len(products)} produits dans stg_product...")
+    """Insère les produits dans stg_product ou dim_product selon la version du schéma."""
     cursor = conn.cursor()
     
-    for product in products:
-        event_timestamp = datetime.now() # Add event_timestamp for SCD2
-        cursor.execute("""
-            INSERT INTO stg_product (product_id, name, category, event_timestamp)
-            VALUES (?, ?, ?, ?)
-        """,
-        product["product_id"],
-        product["name"],
-        product["category"],
-        event_timestamp)
+    # Vérifier si stg_product existe (Marketplace migration 003)
+    cursor.execute("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'stg_product'")
+    has_stg_product = cursor.fetchone() is not None
+    
+    if has_stg_product:
+        print(f"📦 Insertion de {len(products)} produits dans stg_product...")
+        for product in products:
+            event_timestamp = datetime.now()
+            cursor.execute("""
+                INSERT INTO stg_product (product_id, name, category, event_timestamp)
+                VALUES (?, ?, ?, ?)
+            """,
+            product["product_id"],
+            product["name"],
+            product["category"],
+            event_timestamp)
+        print("✅ Produits insérés dans stg_product")
+    else:
+        print(f"📦 Insertion de {len(products)} produits dans dim_product (fallback)...")
+        for product in products:
+            cursor.execute("""
+                IF NOT EXISTS (SELECT 1 FROM dim_product WHERE product_id = ?)
+                INSERT INTO dim_product (product_id, name, category)
+                VALUES (?, ?, ?)
+            """,
+            product["product_id"],
+            product["product_id"],
+            product["name"],
+            product["category"])
+        print("✅ Produits insérés dans dim_product")
     
     conn.commit()
-    print("✅ Produits insérés dans stg_product")
 
 def generate_historical_orders(conn, customers, products, days, orders_per_day):
     """Génère des commandes historiques."""
