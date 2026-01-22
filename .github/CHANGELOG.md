@@ -1,3 +1,22 @@
+# [2.1.0-beta.3](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2026-01-22)
+
+
+### Bug Fixes
+
+* change IP detection service from ipify to ifconfig.me ([6a33a87](https://github.com/DVDJNBR/DWH/commit/6a33a875ecdd77082fadee93b66267dd5eabe83a))
+* **monitoring:** filter activity log alert by Succeeded status to avoid multiple emails ([83c3b2a](https://github.com/DVDJNBR/DWH/commit/83c3b2afcba18b2ac22b5efa0c2dee5e1768bbd9))
+* resolve migration numbering conflict (003 -> 004) ([a11e0d7](https://github.com/DVDJNBR/DWH/commit/a11e0d713318dfa48fc834b4051ea04d9da0ca37))
+
+
+### Features
+
+* add marketplace Stream Analytics test suite ([101744b](https://github.com/DVDJNBR/DWH/commit/101744b71a7711489c92c97725f80d6aca26f15b))
+* fix SCD Type 2 product migration and pipeline ([11497a0](https://github.com/DVDJNBR/DWH/commit/11497a05ed3a8d4ce1e80a523afcfc83e6daf4b8))
+* Implement enhanced monitoring and fix stream analytics alerts ([9dca334](https://github.com/DVDJNBR/DWH/commit/9dca334ba818fa9a4b92ca80ead2f0e0a7b4c54e))
+* optimize monitoring alerts to reduce noise ([4f9ebbd](https://github.com/DVDJNBR/DWH/commit/4f9ebbd9ed30759921e1d2c846065fde170c3605))
+* **scd2:** Implement SCD Type 2 for dim_product ([6004405](https://github.com/DVDJNBR/DWH/commit/600440598b6504f084688a7474b1c649f7f00f4a))
+* Unify marketplace producer and add quarantine test ([baeed49](https://github.com/DVDJNBR/DWH/commit/baeed49a07359c4c23c8db181747d9eb90d984a8))
+
 # [2.1.0-beta.2](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2026-01-20)
 
 
