@@ -49,6 +49,9 @@ status: ## Show Azure resources status
 
 deploy: ## [1] Deploy base infrastructure (ENV=dev by default)
 	@echo "$(GREEN)🚀 Deploying base infrastructure (ENV=$(ENV))...$(NC)"
+	@echo "$(CYAN)🔄 Initializing Terraform with active subscription...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform init -reconfigure
+	@echo "$(GREEN)✅ Terraform initialized$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve -var="environment=$(ENV)"
 
 seed: ## [2] Generate historical data (ENV=dev: 7 days, ENV=prod: 30 days)
