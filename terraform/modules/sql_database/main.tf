@@ -1,5 +1,5 @@
 data "http" "myip" {
-  url = "https://api.ipify.org"
+  url = "https://ifconfig.me/ip"
 }
 
 resource "azurerm_mssql_server" "sql_server" {
