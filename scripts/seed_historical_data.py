@@ -101,23 +101,23 @@ def insert_customers(conn, customers):
     print("✅ Clients insérés")
 
 def insert_products(conn, products):
-    """Insère les produits dans dim_product."""
-    print(f"📦 Insertion de {len(products)} produits dans dim_product...")
+    """Insère les produits dans stg_product."""
+    print(f"📦 Insertion de {len(products)} produits dans stg_product...")
     cursor = conn.cursor()
     
     for product in products:
+        event_timestamp = datetime.now() # Add event_timestamp for SCD2
         cursor.execute("""
-            IF NOT EXISTS (SELECT 1 FROM dim_product WHERE product_id = ?)
-            INSERT INTO dim_product (product_id, name, category)
-            VALUES (?, ?, ?)
+            INSERT INTO stg_product (product_id, name, category, event_timestamp)
+            VALUES (?, ?, ?, ?)
         """,
         product["product_id"],
-        product["product_id"],
         product["name"],
-        product["category"])
+        product["category"],
+        event_timestamp)
     
     conn.commit()
-    print("✅ Produits insérés")
+    print("✅ Produits insérés dans stg_product")
 
 def generate_historical_orders(conn, customers, products, days, orders_per_day):
     """Génère des commandes historiques."""

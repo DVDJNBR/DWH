@@ -18,7 +18,7 @@ module "event_hubs" {
   resource_group_name     = azurerm_resource_group.main.name
   location                = azurerm_resource_group.main.location
   eventhub_namespace_name = "eh-${local.unique_name}"
-  eventhubs               = var.eventhubs
+  eventhubs               = local.eventhubs
   tags                    = local.common_tags
 }
 
@@ -48,13 +48,27 @@ module "sql_database" {
 }
 
 # ============================================================================
+# Quarantine Storage Module
+# ============================================================================
+
+module "quarantine_storage" {
+  count  = var.enable_quarantine ? 1 : 0
+  source = "./modules/quarantine_storage"
+
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  unique_suffix       = replace(local.unique_name, "-", "")
+  tags                = local.common_tags
+}
+
+# ============================================================================
 # Stream Analytics Module
 # ============================================================================
 
 module "stream_analytics" {
   source = "./modules/stream_analytics"
 
-  depends_on = [module.event_hubs, module.sql_database]
+  depends_on = [module.event_hubs, module.sql_database, module.quarantine_storage]
 
   resource_group_name     = azurerm_resource_group.main.name
   location                = azurerm_resource_group.main.location
@@ -64,7 +78,48 @@ module "stream_analytics" {
   sql_database_name       = module.sql_database.database_name
   sql_admin_login         = var.sql_admin_login
   sql_admin_password      = var.sql_admin_password
+  enable_marketplace      = var.enable_marketplace
   tags                    = local.common_tags
+
+  # Quarantine configuration
+  enable_quarantine                 = var.enable_quarantine
+  quarantine_storage_account_name   = var.enable_quarantine ? module.quarantine_storage[0].storage_account_name : ""
+  quarantine_storage_account_key    = var.enable_quarantine ? module.quarantine_storage[0].primary_access_key : ""
+  quarantine_container_orders       = var.enable_quarantine ? module.quarantine_storage[0].container_orders_name : ""
+  quarantine_container_clickstream  = var.enable_quarantine ? module.quarantine_storage[0].container_clickstream_name : ""
+  quarantine_container_vendors      = var.enable_quarantine ? module.quarantine_storage[0].container_vendors_name : ""
+
+  # Monitoring configuration
+  enable_monitoring                 = var.enable_monitoring
+  action_group_id                   = var.enable_monitoring ? module.action_group[0].id : ""
+  resource_group_id                 = azurerm_resource_group.main.id
+}
+
+# ============================================================================
+# Monitoring
+# ============================================================================
+
+module "action_group" {
+  count = var.enable_monitoring ? 1 : 0
+
+  source              = "./modules/action_group"
+  resource_group_name = azurerm_resource_group.main.name
+  action_group_name   = "ag-dwh-critical-alerts"
+  email_receiver      = var.alert_email
+  tags                = local.common_tags
+}
+
+module "dashboard" {
+  count = var.enable_monitoring ? 1 : 0
+
+  source                  = "./modules/dashboard"
+  dashboard_name          = "dwh-main-dashboard"
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  stream_analytics_job_id = module.stream_analytics.job_id
+  tags                    = local.common_tags
+
+  depends_on = [module.stream_analytics]
 }
 
 # ============================================================================
@@ -82,5 +137,9 @@ module "container_producers" {
   connection_string     = module.event_hubs.send_connection_string
   dockerhub_username    = var.dockerhub_username
   dockerhub_token       = var.dockerhub_token
+  sql_server_fqdn       = module.sql_database.server_fqdn
+  sql_database_name     = module.sql_database.database_name
+  sql_admin_login       = var.sql_admin_login
+  sql_admin_password    = var.sql_admin_password
   tags                  = local.common_tags
 }

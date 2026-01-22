@@ -32,3 +32,23 @@ output "container_group_name" {
   description = "Container group name"
   value       = module.container_producers.container_group_name
 }
+
+output "quarantine_storage_account_name" {
+  description = "Quarantine storage account name"
+  value       = var.enable_quarantine ? module.quarantine_storage[0].storage_account_name : ""
+}
+
+output "quarantine_container_orders" {
+  description = "Quarantine orders container name"
+  value       = var.enable_quarantine ? module.quarantine_storage[0].container_orders_name : ""
+}
+
+output "quarantine_container_clickstream" {
+  description = "Quarantine clickstream container name"
+  value       = var.enable_quarantine ? module.quarantine_storage[0].container_clickstream_name : ""
+}
+
+output "quarantine_container_vendors" {
+  description = "Quarantine vendors container name"
+  value       = var.enable_quarantine ? module.quarantine_storage[0].container_vendors_name : ""
+}
