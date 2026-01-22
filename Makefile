@@ -73,6 +73,8 @@ update-schema: ## [4] Apply schema migrations (marketplace + SCD Type 2)
 	@uv run --directory scripts python migrations/apply_migration.py 002
 	@echo "$(CYAN)📦 Migration 003: SCD Type 2 for products...$(NC)"
 	@uv run --directory scripts python migrations/apply_migration.py 003
+	@echo "$(CYAN)📦 Migration 004: Fix missing index...$(NC)"
+	@uv run --directory scripts python migrations/apply_migration.py 004
 
 update-stream: ## [5] Replace base stream with marketplace stream
 	@echo "$(GREEN)🌊 Replacing Stream Analytics with marketplace version...$(NC)"
