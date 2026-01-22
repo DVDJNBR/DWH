@@ -13,7 +13,25 @@ is disabled and therefore marked as read only. You cannot perform any write acti
 on this subscription until it is re-enabled.
 ```
 
-## 🔍 Root Cause
+## 🔍 Root Cause Analysis
+
+### Test Results (2026-01-22 11:26)
+
+| Test               | Command                                               | Result                              |
+| ------------------ | ----------------------------------------------------- | ----------------------------------- |
+| Subscription State | `az account show`                                     | ✅ **Enabled**                      |
+| List Subscriptions | `az account list`                                     | ✅ **Enabled**                      |
+| Read EventHub Keys | `az eventhubs namespace authorization-rule keys list` | ❌ **ReadOnlyDisabledSubscription** |
+
+### Conclusion
+
+The subscription **appears** as "Enabled" in basic checks, but **fails** when trying to access Event Hub authorization rule keys. This indicates:
+
+1. **Billing/Payment Issue**: There's likely an outstanding payment or billing problem
+2. **Partial Suspension**: The subscription is in a "soft disabled" state where reads work but certain operations (like listing security keys) are blocked
+3. **Policy Restriction**: A spending limit or policy is preventing write/sensitive operations
+
+This is **NOT a Terraform or code issue** - it's an Azure billing/subscription policy problem that requires action via the Azure Portal.
 
 **This is NOT a code issue** - it's an Azure subscription configuration problem.
 
