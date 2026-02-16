@@ -147,7 +147,7 @@ if __name__ == "__main__":
     print(f"   Found {len(vendors)} active vendors")
     
     last_vendor_refresh = time.time()
-    last_order = 0
+    last_order = 0.0
     
     while True:
         now = time.time()
