@@ -75,7 +75,7 @@ def check_vendors_eventhub():
                       "-o", "tsv")
         print(f"{GREEN}✓ Vendors Event Hub exists{NC}")
         return True
-    except:
+    except Exception:
         print(f"{RED}✗ Vendors Event Hub not found{NC}")
         print(f"{YELLOW}💡 Run: make stream-new-vendors{NC}")
         return False
