@@ -17,7 +17,6 @@ Usage:
     uv run --directory scripts python tests/test_backup_quick.py
 """
 
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -50,14 +49,14 @@ def test_backup_retention():
     try:
         server = get_terraform_output("sql_server_name")
         database = get_terraform_output("sql_database_name")
-        rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
+        rg = get_terraform_output("resource_group_name")
         
         # Get short-term retention policy
         az = getattr(sh, "az")
         result = az("sql", "db", "str-policy", "show",
                       "--resource-group", rg,
                       "--server", server,
-                      "--database", database,
+                      "--name", database, # FIXED: was --database
                       "--query", "{RetentionDays:retentionDays, DiffBackupHours:diffBackupIntervalInHours}",
                       "-o", "json")
         
@@ -75,26 +74,25 @@ def test_restore_points():
     try:
         server = get_terraform_output("sql_server_name")
         database = get_terraform_output("sql_database_name")
-        rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
-        
-        # List restore points
+        rg = get_terraform_output("resource_group_name")
+        # Check earliest restore date (indicator of restore points)
         az = getattr(sh, "az")
-        result = az("sql", "db", "list-restore-points",
+        result = az("sql", "db", "show",
                       "--resource-group", rg,
                       "--server", server,
-                      "--database", database,
-                      "--query", "length(@)",
+                      "--name", database,
+                      "--query", "earliestRestoreDate",
                       "-o", "tsv")
         
-        count = int(result.strip())
-        if count > 0:
-            print(f"{GREEN}✓ {count} restore point(s) available{NC}")
+        restore_date = result.strip()
+        if restore_date and restore_date != "null":
+            print(f"{GREEN}✓ Restore points available (earliest: {restore_date}){NC}")
             return True
         else:
             print(f"{YELLOW}⚠ No restore points available yet (database might be new){NC}")
             return True  # Not a failure, just new DB
     except Exception as e:
-        print(f"{RED}✗ Failed to check restore points: {e}{NC}")
+        print(f"{RED}✗ Failed to check restore date: {e}{NC}")
         return False
 
 def test_automated_backups():
@@ -104,8 +102,7 @@ def test_automated_backups():
     try:
         server = get_terraform_output("sql_server_name")
         database = get_terraform_output("sql_database_name")
-        rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
-        
+        rg = get_terraform_output("resource_group_name")
         # Get database properties
         az = getattr(sh, "az")
         result = az("sql", "db", "show",
@@ -129,8 +126,7 @@ def test_geo_replication():
     try:
         server = get_terraform_output("sql_server_name")
         database = get_terraform_output("sql_database_name")
-        rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
-        
+        rg = get_terraform_output("resource_group_name")
         # Check if geo-backup is enabled
         az = getattr(sh, "az")
         result = az("sql", "db", "show",
