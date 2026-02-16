@@ -28,7 +28,7 @@ producers = {
     for name in EVENT_HUBS
 }
 
-timers = {name: 0 for name in EVENT_HUBS}
+timers = {name: 0.0 for name in EVENT_HUBS}
 
 # Global pool of customers
 CUSTOMERS_POOL = []
