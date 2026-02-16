@@ -1,4 +1,9 @@
 {
+  "include": [
+    "scripts",
+    "data-generator",
+    "TEACHING_DWH_terraform"
+  ],
   "executionEnvironments": [
     {
       "root": "scripts",
@@ -10,5 +15,14 @@
       "venvPath": "data-generator",
       "venv": ".venv"
     }
-  ]
+  ],
+  "extraPaths": [
+    "scripts/.venv/lib/python3.13/site-packages",
+    "scripts/.venv/lib/python3.12/site-packages",
+    "scripts/.venv/lib/python3.11/site-packages",
+    "data-generator/.venv/lib/python3.13/site-packages",
+    "data-generator/.venv/lib/python3.12/site-packages",
+    "data-generator/.venv/lib/python3.11/site-packages"
+  ],
+  "reportMissingImports": "warning"
 }

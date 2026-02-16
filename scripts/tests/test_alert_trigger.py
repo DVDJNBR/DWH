@@ -17,7 +17,7 @@ if not CONNECTION_STR:
 def send_malformed_events(count=10):
     print(f"🚀 Starting Alert Stress Test: Sending {count} malformed events...")
     producer = EventHubProducerClient.from_connection_string(
-        conn_str=CONNECTION_STR, 
+        conn_str=str(CONNECTION_STR), 
         eventhub_name=EVENTHUB_NAME
     )
     

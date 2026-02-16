@@ -69,7 +69,8 @@ def get_terraform_output(key):
     try:
         # Le script est dans scripts/tests/, donc terraform est dans ../../terraform
         terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-        result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+        terraform = getattr(sh, "terraform")
+        result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
         return result.strip()
     except sh.ErrorReturnCode as e:
         print_error(f"Erreur Terraform pour {key}: {e}")
@@ -147,7 +148,8 @@ def main():
     # Vérifier que la base existe
     print_info("🔍 Vérification de la base de données...")
     try:
-        result = sh.az(
+        az = getattr(sh, "az")
+        result = az(
             "sql", "db", "show",
             "--resource-group", rg_name,
             "--server", sql_server_name,
@@ -260,7 +262,8 @@ def main():
     start_time = time.time()
     
     try:
-        sh.az(
+        az = getattr(sh, "az")
+        az(
             "sql", "db", "restore",
             "--resource-group", rg_name,
             "--server", sql_server_name,
@@ -390,7 +393,8 @@ Différences détectées :
     if response.lower() == 'y':
         print_info("🗑️  Suppression de la base restaurée...")
         try:
-            sh.az(
+            az = getattr(sh, "az")
+            az(
                 "sql", "db", "delete",
                 "--resource-group", rg_name,
                 "--server", sql_server_name,

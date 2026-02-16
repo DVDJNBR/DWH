@@ -13,7 +13,6 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import pyodbc
@@ -38,7 +37,8 @@ fake = Faker()
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
     return result.strip()
 
 def get_db_connection():
@@ -66,7 +66,8 @@ def check_vendors_eventhub():
     try:
         namespace = get_terraform_output("eventhub_namespace")
         rg = get_terraform_output("resource_group_name")
-        result = sh.az("eventhubs", "eventhub", "show",
+        az = getattr(sh, "az")
+        az("eventhubs", "eventhub", "show",
                       "--namespace-name", namespace,
                       "--name", "vendors",
                       "--resource-group", rg,
@@ -74,7 +75,7 @@ def check_vendors_eventhub():
                       "-o", "tsv")
         print(f"{GREEN}✓ Vendors Event Hub exists{NC}")
         return True
-    except Exception as e:
+    except:
         print(f"{RED}✗ Vendors Event Hub not found{NC}")
         print(f"{YELLOW}💡 Run: make stream-new-vendors{NC}")
         return False
@@ -87,7 +88,8 @@ def send_vendor_event():
     namespace = get_terraform_output("eventhub_namespace")
     rg = get_terraform_output("resource_group_name")
 
-    connection_string = sh.az(
+    az = getattr(sh, "az")
+    connection_string = az(
         "eventhubs", "namespace", "authorization-rule", "keys", "list",
         "--namespace-name", namespace,
         "--name", "send-policy",
@@ -137,7 +139,8 @@ def wait_for_processing(vendor_id, max_wait=60):
             "SELECT COUNT(*) FROM dim_vendor WHERE vendor_id = ?",
             vendor_id
         )
-        count = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        count = row[0] if row else 0
         
         if count > 0:
             elapsed = int(time.time() - start_time)
@@ -232,9 +235,9 @@ def show_recent_orders():
         print(f"{CYAN}─────────────────────────────────────────────────────────────{NC}")
         print(f"  {GREEN}Order #{i}{NC}: {row.order_id}")
         print(f"  📅 Date: {row.order_timestamp}")
-        print(f"  👤 Customer: {row.customer_name or 'N/A'} ({row.customer_city or 'N/A'})")
-        print(f"  📦 Product: {row.product_name or 'N/A'} [{row.product_category or 'N/A'}]")
-        print(f"  🏪 Vendor: {row.vendor_name or 'N/A'} [{row.vendor_category or 'N/A'}]")
+        print(f"  👤 Customer: {getattr(row, 'customer_name', 'N/A')} ({getattr(row, 'customer_city', 'N/A')})")
+        print(f"  📦 Product: {getattr(row, 'product_name', 'N/A')} [{getattr(row, 'product_category', 'N/A')}]")
+        print(f"  🏪 Vendor: {getattr(row, 'vendor_name', 'N/A')} [{getattr(row, 'vendor_category', 'N/A')}]")
         unit_price = float(row.unit_price or 0)
         total_amount = float(row.total_amount or 0)
         print(f"  💰 {row.quantity or 0} x ${unit_price:.2f} = ${total_amount:.2f}")
@@ -254,9 +257,10 @@ def show_recent_orders():
     stats = cursor.fetchone()
 
     print(f"\n{CYAN}📊 Summary:{NC}")
-    print(f"  Total orders: {stats.total_orders}")
-    print(f"  Active vendors: {stats.vendor_count}")
-    print(f"  Total revenue: ${float(stats.total_revenue or 0):,.2f}")
+    if stats:
+        print(f"  Total orders: {getattr(stats, 'total_orders', 0)}")
+        print(f"  Active vendors: {getattr(stats, 'vendor_count', 0)}")
+        print(f"  Total revenue: ${getattr(stats, 'total_revenue', 0.0):,.2f}")
 
     conn.close()
 

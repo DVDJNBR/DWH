@@ -26,7 +26,8 @@ load_dotenv(env_path)
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
     return result.strip()
 
 def generate_vendor_id(company_name):
@@ -84,7 +85,8 @@ def seed_vendors(count=10):
             
             # Check if vendor_id already exists
             cursor.execute("SELECT COUNT(*) FROM dim_vendor WHERE vendor_id = ?", vendor_id)
-            if cursor.fetchone()[0] > 0:
+            row = cursor.fetchone()
+            if row and row[0] > 0:
                 print(f"  ⚠️  Skipped {vendor_id} (already exists)")
                 vendors_skipped += 1
                 continue

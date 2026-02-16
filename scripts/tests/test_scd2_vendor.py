@@ -16,7 +16,6 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import pyodbc
@@ -41,7 +40,8 @@ fake = Faker()
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
     return result.strip()
 
 def get_db_connection():
@@ -68,7 +68,8 @@ def send_vendor_event(vendor_data):
     namespace = get_terraform_output("eventhub_namespace")
     rg = get_terraform_output("resource_group_name")
 
-    connection_string = sh.az(
+    az = getattr(sh, "az")
+    connection_string = az(
         "eventhubs", "namespace", "authorization-rule", "keys", "list",
         "--namespace-name", namespace,
         "--name", "send-policy",
@@ -98,7 +99,8 @@ def wait_for_dim_vendor(vendor_id, max_wait=60):
             "SELECT COUNT(*) FROM dim_vendor WHERE vendor_id = ? AND is_current = 1",
             vendor_id
         )
-        count = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        count = row[0] if row else 0
 
         if count > 0:
             return True

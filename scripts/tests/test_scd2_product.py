@@ -17,7 +17,6 @@ import os
 import sys
 import time
 import uuid
-from datetime import datetime
 from pathlib import Path
 
 import pyodbc
@@ -43,7 +42,8 @@ def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
     try:
-        result = sh.terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
+        terraform = getattr(sh, "terraform")
+        result = terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
         return result.strip()
     except sh.ErrorReturnCode as e:
         print(f"{RED}Error getting Terraform output for '{key}': {e}{NC}")
@@ -78,7 +78,8 @@ def send_order_event(product_data):
     rg = get_terraform_output("resource_group_name")
 
     try:
-        connection_string = sh.az(
+        az = getattr(sh, "az")
+        connection_string = az(
             "eventhubs", "namespace", "authorization-rule", "keys", "list",
             "--namespace-name", namespace,
             "--name", "send-policy",
@@ -126,7 +127,8 @@ def wait_for_dim_product(product_id, max_wait=60):
             "SELECT COUNT(*) FROM dim_product WHERE product_id = ? AND is_current = 1",
             product_id
         )
-        count = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        count = row[0] if row else 0
 
         if count > 0:
             return True
