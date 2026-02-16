@@ -1,3 +1,10 @@
+# [2.1.0-beta.8](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.7...v2.1.0-beta.8) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve backup test failures by adding missing terraform outputs and fixing az cli commands ([2075318](https://github.com/DVDJNBR/DWH/commit/2075318de6edee3cb266d97aefc6b292ceacb70c))
+
 # [2.1.0-beta.7](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.6...v2.1.0-beta.7) (2026-02-16)
 
 
