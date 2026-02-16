@@ -1,0 +1,14 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "scripts",
+      "venvPath": "scripts",
+      "venv": ".venv"
+    },
+    {
+      "root": "data-generator",
+      "venvPath": "data-generator",
+      "venv": ".venv"
+    }
+  ]
+}
