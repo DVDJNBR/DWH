@@ -109,6 +109,7 @@ make enable-monitoring
 ```
 
 - `make stream-start` / `make stream-stop` to control Stream Analytics job
+- `make test-monitoring` to verify configuration
 
 **Other useful commands:**
 
@@ -681,6 +682,7 @@ az monitor activity-log list \
 - **Marketplace Stream Verification**: `make test-marketplace-stream` (Stream Analytics configuration validation)
 - **Vendor SCD2 Verification**: `make test-scd2-vendor` (SCD Type 2 validation for vendors)
 - **Product SCD2 Verification**: `make test-scd2-product` (SCD Type 2 validation for products)
+- **Monitoring Verification**: `make test-monitoring` (Validates Action Groups, Alerts, Dashboard)
 
 ## 👤 Author
 

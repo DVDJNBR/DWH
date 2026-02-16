@@ -111,6 +111,8 @@ stream-new-vendors: ## [8] Enable vendor events streaming (requires ENV)
 		-target=module.container_producers \
 		-var="environment=$(ENV)" \
 		-var="enable_marketplace=true"
+	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
+	@az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
 	@echo "$(GREEN)✅ Marketplace streaming enabled!$(NC)"
 
 enable-quarantine: ## [6] Enable data quality quarantine zone
@@ -202,6 +204,10 @@ test-quarantine: ## Test data quality quarantine (invalid events)
 test-scd2-product: ## Test SCD Type 2 implementation for products
 	@echo "$(GREEN)🧪 Testing SCD Type 2 for products...$(NC)"
 	@uv run --directory scripts python tests/test_scd2_product.py
+
+test-monitoring: ## Test monitoring configuration (Action Group, Alerts, Dashboard)
+	@echo "$(GREEN)🧪 Testing monitoring configuration...$(NC)"
+	@uv run --directory scripts python tests/test_monitoring.py
 
 ##@ Terraform (Advanced)
 
