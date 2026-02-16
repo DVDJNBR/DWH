@@ -1,3 +1,10 @@
+# [2.1.0-beta.5](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve type mismatch in marketplace producer and add pyrightconfig ([c818868](https://github.com/DVDJNBR/DWH/commit/c818868a3c1170001038ca1d454cf03e82dc435a))
+
 # [2.1.0-beta.4](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2026-02-16)
 
 
