@@ -1,3 +1,10 @@
+# [2.1.0-beta.7](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.6...v2.1.0-beta.7) (2026-02-16)
+
+
+### Bug Fixes
+
+* replace bare except with Exception ([143d6e7](https://github.com/DVDJNBR/DWH/commit/143d6e721c1742e32d9a891a1e9c1bbb0fe67b98))
+
 # [2.1.0-beta.6](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.5...v2.1.0-beta.6) (2026-02-16)
 
 
