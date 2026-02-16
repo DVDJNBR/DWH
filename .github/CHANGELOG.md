@@ -1,3 +1,10 @@
+# [2.1.0-beta.6](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.5...v2.1.0-beta.6) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve numerous linting and logic issues in tests and data-generator ([1fc5b75](https://github.com/DVDJNBR/DWH/commit/1fc5b7527d403ee6bc31236b8cf2ff8348d897a5))
+
 # [2.1.0-beta.5](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2026-02-16)
 
 
