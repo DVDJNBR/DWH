@@ -237,8 +237,8 @@ def main():
         "SELECT COUNT(*) FROM fact_clickstream"
     )
     
-    orders_lost = orders_before - orders_after
-    clicks_lost = clicks_before - clicks_after
+    orders_lost = int(orders_before or 0) - int(orders_after or 0)
+    clicks_lost = int(clicks_before or 0) - int(clicks_after or 0)
     
     print(f"{Colors.RED}✓{Colors.NC} fact_order       : {orders_after} lignes ({Colors.RED}-{orders_lost}{Colors.NC})")
     print(f"{Colors.RED}✓{Colors.NC} fact_clickstream : {clicks_after} lignes ({Colors.RED}-{clicks_lost}{Colors.NC})")
@@ -336,13 +336,13 @@ Base restaurée      : {restored_db_name}
 Table : fact_order
   État initial      : {orders_before} lignes
   Après incident    : {orders_after} lignes (-{orders_lost})
-  Après restauration: {orders_restored} lignes ({'+' if orders_restored - orders_before > 0 else ''}{orders_restored - orders_before if orders_restored != orders_before else '±0'})
+  Après restauration: {orders_restored} lignes ({'+' if int(orders_restored or 0) - int(orders_before or 0) > 0 else ''}{int(orders_restored or 0) - int(orders_before or 0) if orders_restored != orders_before else '±0'})
   Récupération      : {'✓ SUCCÈS' if orders_restored == orders_before else '✗ ÉCHEC'}
 
 Table : fact_clickstream
   État initial      : {clicks_before} lignes
   Après incident    : {clicks_after} lignes (-{clicks_lost})
-  Après restauration: {clicks_restored} lignes ({'+' if clicks_restored - clicks_before > 0 else ''}{clicks_restored - clicks_before if clicks_restored != clicks_before else '±0'})
+  Après restauration: {clicks_restored} lignes ({'+' if int(clicks_restored or 0) - int(clicks_before or 0) > 0 else ''}{int(clicks_restored or 0) - int(clicks_before or 0) if clicks_restored != clicks_before else '±0'})
   Récupération      : {'✓ SUCCÈS' if clicks_restored == clicks_before else '✗ ÉCHEC'}
 
 {'━' * 60}

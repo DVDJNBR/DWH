@@ -145,6 +145,21 @@ enable-monitoring: ## [9] Enable monitoring dashboard and alerts
 	@echo "$(GREEN)✅ Monitoring enabled and stream restarted!$(NC)"
 	@echo "$(CYAN)📊 Dashboard: https://portal.azure.com/#@/dashboard/arm/subscriptions/.../resourceGroups/$(RESOURCE_GROUP)/providers/Microsoft.Portal/dashboards/dwh-main-dashboard$(NC)"
 
+deploy-alerts-test: ## [9] Disable quarantine zone to test alerts
+	@echo "$(YELLOW)⚠️  Disabling quarantine zone for alert testing...$(NC)"
+	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
+	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)🔧 Applying Terraform changes (Quarantine=OFF)...$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="enable_marketplace=true" \
+		-var="enable_quarantine=false" \
+		-var="enable_monitoring=true"
+	@echo "$(GREEN)▶️  Restarting Stream Analytics job...$(NC)"
+	@az stream-analytics job start --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace --output-start-mode JobStartTime
+	@echo "$(GREEN)✅ Quarantine DISABLED and stream restarted!$(NC)"
+
 ##@ Testing
 
 test-base: ## Test base schema (after deploy)
