@@ -1,3 +1,10 @@
+# [2.1.0-beta.9](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.8...v2.1.0-beta.9) (2026-02-16)
+
+
+### Bug Fixes
+
+* **quarantine:** resolve stream analytics job conflicts and race conditions ([b7902d2](https://github.com/DVDJNBR/DWH/commit/b7902d207622238d2abf85275570212cf61cd117))
+
 # [2.1.0-beta.8](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.7...v2.1.0-beta.8) (2026-02-16)
 
 
