@@ -18,7 +18,8 @@ load_dotenv(env_path)
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
     return result.strip()
 
 def apply_migration(migration_number):

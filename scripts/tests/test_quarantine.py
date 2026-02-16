@@ -10,11 +10,9 @@ Usage:
 """
 
 import json
-import os
 import sys
 import time
 import uuid
-from datetime import datetime
 from pathlib import Path
 
 import sh
@@ -37,7 +35,8 @@ NC = '\033[0m'
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={str(terraform_dir)}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
     return result.strip()
 
 
@@ -46,7 +45,8 @@ def get_eventhub_connection():
     namespace = get_terraform_output("eventhub_namespace")
     rg = get_terraform_output("resource_group_name")
 
-    connection_string = sh.az(
+    az = getattr(sh, "az")
+    connection_string = az(
         "eventhubs", "namespace", "authorization-rule", "keys", "list",
         "--namespace-name", namespace,
         "--name", "send-policy",
@@ -65,7 +65,8 @@ def get_storage_connection():
 
     rg = get_terraform_output("resource_group_name")
 
-    connection_string = sh.az(
+    az = getattr(sh, "az")
+    connection_string = az(
         "storage", "account", "show-connection-string",
         "--name", storage_account,
         "--resource-group", rg,

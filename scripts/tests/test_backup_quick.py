@@ -39,7 +39,8 @@ NC = '\033[0m'
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
     return result.strip()
 
 def test_backup_retention():
@@ -52,7 +53,8 @@ def test_backup_retention():
         rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
         
         # Get short-term retention policy
-        result = sh.az("sql", "db", "str-policy", "show",
+        az = getattr(sh, "az")
+        result = az("sql", "db", "str-policy", "show",
                       "--resource-group", rg,
                       "--server", server,
                       "--database", database,
@@ -76,7 +78,8 @@ def test_restore_points():
         rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
         
         # List restore points
-        result = sh.az("sql", "db", "list-restore-points",
+        az = getattr(sh, "az")
+        result = az("sql", "db", "list-restore-points",
                       "--resource-group", rg,
                       "--server", server,
                       "--database", database,
@@ -104,7 +107,8 @@ def test_automated_backups():
         rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
         
         # Get database properties
-        result = sh.az("sql", "db", "show",
+        az = getattr(sh, "az")
+        result = az("sql", "db", "show",
                       "--resource-group", rg,
                       "--server", server,
                       "--name", database,
@@ -128,7 +132,8 @@ def test_geo_replication():
         rg = f"rg-e6-{os.getenv('TF_VAR_username')}"
         
         # Check if geo-backup is enabled
-        result = sh.az("sql", "db", "show",
+        az = getattr(sh, "az")
+        result = az("sql", "db", "show",
                       "--resource-group", rg,
                       "--server", server,
                       "--name", database,

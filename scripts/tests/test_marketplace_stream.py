@@ -9,6 +9,7 @@ with all required inputs, outputs, and queries.
 import sys
 from pathlib import Path
 
+import json
 import sh
 from dotenv import load_dotenv
 
@@ -28,7 +29,8 @@ load_dotenv(env_path)
 def get_terraform_output(key):
     """Get Terraform output value"""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
-    result = sh.terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
+    terraform = getattr(sh, "terraform")
+    result = terraform(f"-chdir={terraform_dir}", "output", "-raw", key)
     return result.strip()
 
 
@@ -69,7 +71,8 @@ def main():
     print_header("TEST 1: Stream Analytics Job Status")
     
     try:
-        result = sh.az(
+        az = getattr(sh, "az")
+        result = az(
             "stream-analytics", "job", "show",
             "--resource-group", resource_group,
             "--name", job_name,
@@ -77,7 +80,6 @@ def main():
             "-o", "json"
         )
         
-        import json
         job_info = json.loads(str(result))
         
         tests_total += 1
@@ -111,7 +113,8 @@ def main():
     expected_inputs = ['InputOrders', 'InputClickstream', 'InputVendors']
     
     try:
-        result = sh.az(
+        az = getattr(sh, "az")
+        result = az(
             "stream-analytics", "input", "list",
             "--resource-group", resource_group,
             "--job-name", job_name,
@@ -145,7 +148,8 @@ def main():
     ]
     
     try:
-        result = sh.az(
+        az = getattr(sh, "az")
+        result = az(
             "stream-analytics", "output", "list",
             "--resource-group", resource_group,
             "--job-name", job_name,
