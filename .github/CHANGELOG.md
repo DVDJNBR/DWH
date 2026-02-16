@@ -1,3 +1,37 @@
+# [2.1.0](https://github.com/DVDJNBR/DWH/compare/v2.0.5...v2.1.0) (2026-02-16)
+
+
+### Bug Fixes
+
+* change IP detection service from ipify to ifconfig.me ([6a33a87](https://github.com/DVDJNBR/DWH/commit/6a33a875ecdd77082fadee93b66267dd5eabe83a))
+* **monitoring:** filter activity log alert by Succeeded status to avoid multiple emails ([83c3b2a](https://github.com/DVDJNBR/DWH/commit/83c3b2afcba18b2ac22b5efa0c2dee5e1768bbd9))
+* **quarantine:** resolve stream analytics job conflicts and race conditions ([b7902d2](https://github.com/DVDJNBR/DWH/commit/b7902d207622238d2abf85275570212cf61cd117))
+* replace bare except with Exception ([143d6e7](https://github.com/DVDJNBR/DWH/commit/143d6e721c1742e32d9a891a1e9c1bbb0fe67b98))
+* resolve backup test failures by adding missing terraform outputs and fixing az cli commands ([2075318](https://github.com/DVDJNBR/DWH/commit/2075318de6edee3cb266d97aefc6b292ceacb70c))
+* resolve linting errors (type mismatches, unused imports, operator issues) ([bf0e314](https://github.com/DVDJNBR/DWH/commit/bf0e3145426e601c7ba327ab24fbb7582f2100ce))
+* resolve migration numbering conflict (003 -> 004) ([a11e0d7](https://github.com/DVDJNBR/DWH/commit/a11e0d713318dfa48fc834b4051ea04d9da0ca37))
+* resolve numerous linting and logic issues in tests and data-generator ([1fc5b75](https://github.com/DVDJNBR/DWH/commit/1fc5b7527d403ee6bc31236b8cf2ff8348d897a5))
+* resolve type mismatch in marketplace producer and add pyrightconfig ([c818868](https://github.com/DVDJNBR/DWH/commit/c818868a3c1170001038ca1d454cf03e82dc435a))
+
+
+### Features
+
+* add categorized help menu in English ([cec0e49](https://github.com/DVDJNBR/DWH/commit/cec0e49ae944d54511f70d4a54ebef79d6ab3097))
+* add marketplace producer with vendor_id support ([39e037d](https://github.com/DVDJNBR/DWH/commit/39e037dc56d6ece89ae1ddbff7b837d9bd6e2d23))
+* add marketplace Stream Analytics test suite ([101744b](https://github.com/DVDJNBR/DWH/commit/101744b71a7711489c92c97725f80d6aca26f15b))
+* add quick backup test for faster validation ([13e9735](https://github.com/DVDJNBR/DWH/commit/13e973529b365371b95c4b8972cd254ecbb56c34))
+* add seed_vendors.py with Faker for realistic vendor data ([4277477](https://github.com/DVDJNBR/DWH/commit/4277477d6311eb594fb91b088c131ae2a957bb8a))
+* add vendor streaming with make stream-new-vendors ([14661f5](https://github.com/DVDJNBR/DWH/commit/14661f52a777c868acd01fb87e849433cfb0cf5c))
+* complete Story 1.5 GDPR compliance and Story 1.4 Monitoring ([2dd02f1](https://github.com/DVDJNBR/DWH/commit/2dd02f1e4abfde8b7745b3459e5824b7122db9a2))
+* fix SCD Type 2 product migration and pipeline ([11497a0](https://github.com/DVDJNBR/DWH/commit/11497a05ed3a8d4ce1e80a523afcfc83e6daf4b8))
+* Implement enhanced monitoring and fix stream analytics alerts ([9dca334](https://github.com/DVDJNBR/DWH/commit/9dca334ba818fa9a4b92ca80ead2f0e0a7b4c54e))
+* **marketplace:** implement two-stream architecture with vendor_id support ([9a37c63](https://github.com/DVDJNBR/DWH/commit/9a37c63c4d94a8446a430d3ba367f781686fda45))
+* merge FT/STREAM_NEW_VENDORS into DEV ([0ea41a9](https://github.com/DVDJNBR/DWH/commit/0ea41a973d6c0be2568ea0d6d90fdfca7a3264a2))
+* optimize monitoring alerts to reduce noise ([4f9ebbd](https://github.com/DVDJNBR/DWH/commit/4f9ebbd9ed30759921e1d2c846065fde170c3605))
+* **quarantine:** Implement data quality quarantine ([de224d0](https://github.com/DVDJNBR/DWH/commit/de224d0aac79bed03bf728b37e4c9d2c0b2ab64a))
+* **scd2:** Implement SCD Type 2 for dim_product ([6004405](https://github.com/DVDJNBR/DWH/commit/600440598b6504f084688a7474b1c649f7f00f4a))
+* Unify marketplace producer and add quarantine test ([baeed49](https://github.com/DVDJNBR/DWH/commit/baeed49a07359c4c23c8db181747d9eb90d984a8))
+
 # [2.1.0-beta.9](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.8...v2.1.0-beta.9) (2026-02-16)
 
 
