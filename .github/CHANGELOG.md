@@ -1,3 +1,10 @@
+# [2.1.0-beta.10](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.9...v2.1.0-beta.10) (2026-02-16)
+
+
+### Features
+
+* complete Story 1.5 GDPR compliance and Story 1.4 Monitoring ([2dd02f1](https://github.com/DVDJNBR/DWH/commit/2dd02f1e4abfde8b7745b3459e5824b7122db9a2))
+
 # [2.1.0-beta.9](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.8...v2.1.0-beta.9) (2026-02-16)
 
 
