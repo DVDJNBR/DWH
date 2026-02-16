@@ -18,6 +18,11 @@ output "sql_server_fqdn" {
   value       = module.sql_database.server_fqdn
 }
 
+output "sql_server_name" {
+  description = "SQL Server name"
+  value       = module.sql_database.server_name
+}
+
 output "sql_database_name" {
   description = "SQL Database name"
   value       = module.sql_database.database_name
