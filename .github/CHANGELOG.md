@@ -1,3 +1,10 @@
+# [2.1.0-beta.4](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* resolve linting errors (type mismatches, unused imports, operator issues) ([bf0e314](https://github.com/DVDJNBR/DWH/commit/bf0e3145426e601c7ba327ab24fbb7582f2100ce))
+
 # [2.1.0-beta.3](https://github.com/DVDJNBR/DWH/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2026-01-22)
 
 
