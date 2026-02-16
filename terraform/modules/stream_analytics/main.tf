@@ -498,7 +498,9 @@ resource "null_resource" "start_job" {
     azurerm_stream_analytics_output_mssql.output_fact_clickstream,
     azurerm_stream_analytics_output_blob.quarantine_orders,
     azurerm_stream_analytics_output_blob.quarantine_clickstream,
-    azurerm_stream_analytics_output_blob.quarantine_vendors
+    azurerm_stream_analytics_output_blob.quarantine_vendors,
+    azurerm_stream_analytics_stream_input_eventhub.input_vendors,
+    azurerm_stream_analytics_output_mssql.output_stg_vendor
   ]
 
   provisioner "local-exec" {

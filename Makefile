@@ -101,6 +101,7 @@ stream-new-vendors: ## [8] Enable vendor events streaming (requires ENV)
 	@echo "$(GREEN)🌊 Enabling vendor streaming (ENV=$(ENV))...$(NC)"
 	@echo "$(YELLOW)⚠️  This adds vendor Event Hub and activates marketplace producer$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow 2>/dev/null || true
 	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
 	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
 	@sleep 10
@@ -116,6 +117,7 @@ enable-quarantine: ## [6] Enable data quality quarantine zone
 	@echo "$(GREEN)🗑️  Enabling data quality quarantine...$(NC)"
 	@echo "$(YELLOW)⚠️  This creates Azure Blob Storage for invalid events$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow 2>/dev/null || true
 	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
 	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
 	@sleep 10
@@ -132,6 +134,7 @@ enable-monitoring: ## [9] Enable monitoring dashboard and alerts
 	@echo "$(GREEN)📊 Enabling monitoring and alerting...$(NC)"
 	@echo "$(YELLOW)⚠️  This creates Azure Dashboard + Action Group + Alert Rules$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow 2>/dev/null || true
 	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
 	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
 	@sleep 10
@@ -148,6 +151,7 @@ enable-monitoring: ## [9] Enable monitoring dashboard and alerts
 deploy-alerts-test: ## [9] Disable quarantine zone to test alerts
 	@echo "$(YELLOW)⚠️  Disabling quarantine zone for alert testing...$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"
+	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow 2>/dev/null || true
 	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name asa-shopnow-marketplace 2>/dev/null || true
 	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
 	@sleep 10
