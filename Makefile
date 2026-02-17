@@ -272,18 +272,24 @@ stream-logs: ## Show Stream Analytics activity logs
 
 destroy: ## Destroy infrastructure (with confirmation)
 	@echo "$(RED)💥 Destroying infrastructure...$(NC)"
-	@echo "$(YELLOW)⚠️  Stopping Stream Analytics job first...$(NC)"
-	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) 2>/dev/null || true
-	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
-	@sleep 10
+	@echo "$(YELLOW)⚠️  Stopping all Stream Analytics jobs first...$(NC)"
+	@for job in $$(az stream-analytics job list --resource-group $(RESOURCE_GROUP) --query "[].name" -o tsv 2>/dev/null); do \
+		echo "  → Stopping job: $$job"; \
+		az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $$job 2>/dev/null || true; \
+	done
+	@echo "$(YELLOW)⏳ Waiting 15 seconds for jobs to stop...$(NC)"
+	@sleep 15
 	cd $(TERRAFORM_DIR) && terraform destroy
 
 destroy-force: ## Destroy infrastructure (without confirmation)
 	@echo "$(RED)💥 Automatic destruction...$(NC)"
-	@echo "$(YELLOW)⚠️  Stopping Stream Analytics job first...$(NC)"
-	-az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $(STREAM_JOB) 2>/dev/null || true
-	@echo "$(YELLOW)⏳ Waiting 10 seconds...$(NC)"
-	@sleep 10
+	@echo "$(YELLOW)⚠️  Stopping all Stream Analytics jobs first...$(NC)"
+	@for job in $$(az stream-analytics job list --resource-group $(RESOURCE_GROUP) --query "[].name" -o tsv 2>/dev/null); do \
+		echo "  → Stopping job: $$job"; \
+		az stream-analytics job stop --resource-group $(RESOURCE_GROUP) --name $$job 2>/dev/null || true; \
+	done
+	@echo "$(YELLOW)⏳ Waiting 15 seconds for jobs to stop...$(NC)"
+	@sleep 15
 	cd $(TERRAFORM_DIR) && terraform destroy -auto-approve
 
 ##@ Shortcuts
