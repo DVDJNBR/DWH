@@ -125,32 +125,68 @@ def check_dashboard(rg):
         print(f"{RED}✗ Failed to list Dashboards: {e}{NC}")
         return False
 
+
+class OutputBuffer:
+    """Buffer to capture stdout and write to file"""
+    def __init__(self, filename):
+        self.filename = filename
+        self.buffer = []
+        self.original_stdout = sys.stdout
+
+    def write(self, text):
+        self.buffer.append(text)
+        self.original_stdout.write(text)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+    def save(self):
+        with open(self.filename, 'w') as f:
+            # Remove color codes
+            text = ''.join(self.buffer)
+            for color in [GREEN, YELLOW, RED, CYAN, NC]:
+                text = text.replace(color, '')
+            f.write(text)
+
 def main():
+    report_path = Path(__file__).parent / 'monitoring_report.txt'
+    output_buffer = OutputBuffer(str(report_path))
+    sys.stdout = output_buffer
+    
     print(f"\n{CYAN}{'='*60}{NC}")
     print(f"{CYAN}Test: Operations Monitoring Configuration{NC}")
     print(f"{CYAN}{'='*60}{NC}\n")
 
-    rg = get_terraform_output("resource_group_name")
-    if not rg:
-        print(f"{RED}✗ Could not retrieve resource group name from Terraform output.{NC}")
-        sys.exit(1)
+    try:
+        rg = get_terraform_output("resource_group_name")
+        if not rg:
+            print(f"{RED}✗ Could not retrieve resource group name from Terraform output.{NC}")
+            sys.exit(1)
 
-    checks = [
-        check_resource_group(rg),
-        check_action_group(rg),
-        check_metric_alerts(rg),
-        check_activity_log_alerts(rg),
-        check_dashboard(rg)
-    ]
+        checks = [
+            check_resource_group(rg),
+            check_action_group(rg),
+            check_metric_alerts(rg),
+            check_activity_log_alerts(rg),
+            check_dashboard(rg)
+        ]
 
-    print(f"\n{CYAN}{'='*60}{NC}")
-    if all(checks):
-        print(f"{GREEN}✓ All monitoring tests passed!{NC}")
-        sys.exit(0)
-    else:
-        print(f"{RED}✗ Some monitoring tests failed.{NC}")
-        print(f"{YELLOW}💡 Ensure you have run 'make enable-monitoring'{NC}")
-        sys.exit(1)
+        print(f"\n{CYAN}{'='*60}{NC}")
+        if all(checks):
+            print(f"{GREEN}✓ All monitoring tests passed!{NC}")
+            print(f"{GREEN}{'='*60}{NC}")
+            print(f"\n📄 Report saved: {report_path}\n")
+            sys.exit(0)
+        else:
+            print(f"{RED}✗ Some monitoring tests failed.{NC}")
+            print(f"{YELLOW}💡 Ensure you have run 'make enable-monitoring'{NC}")
+            print(f"{RED}{'='*60}{NC}\n")
+            sys.exit(1)
+
+    finally:
+        output_buffer.save()
+        sys.stdout = output_buffer.original_stdout
 
 if __name__ == "__main__":
     main()
+

@@ -64,3 +64,26 @@ variable "enable_long_term_retention" {
   type        = bool
   default     = false
 }
+
+# ============================================================================
+# Security Configuration
+# ============================================================================
+
+variable "enable_security" {
+  description = "Enable security features (Auditing, Data Masking)"
+  type        = bool
+  default     = false
+}
+
+variable "storage_account_endpoint" {
+  description = "Storage account endpoint for SQL Auditing"
+  type        = string
+  default     = ""
+}
+
+variable "storage_account_key" {
+  description = "Storage account key for SQL Auditing"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

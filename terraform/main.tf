@@ -45,6 +45,11 @@ module "sql_database" {
   backup_retention_days       = local.backup_retention_days
   geo_backup_enabled          = local.geo_backup_enabled
   enable_long_term_retention  = local.enable_long_term_retention
+
+  # Security configuration
+  enable_security          = var.enable_security
+  storage_account_endpoint = var.enable_quarantine ? module.quarantine_storage[0].storage_account_endpoint : ""
+  storage_account_key      = var.enable_quarantine ? module.quarantine_storage[0].primary_access_key : ""
 }
 
 # ============================================================================

@@ -126,3 +126,42 @@ resource "azurerm_container_group" "db_setup" {
   }
 }
 
+
+# ============================================================================
+# SECURITY & GDPR (activated with enable_security variable)
+# ============================================================================
+
+# Dynamic Data Masking - Email
+resource "azurerm_mssql_database_extended_auditing_policy" "example" {
+  database_id            = azurerm_mssql_database.dwh.id
+  storage_endpoint       = var.storage_account_endpoint
+  storage_account_access_key = var.storage_account_key
+  storage_account_access_key_is_secondary = false
+  retention_in_days      = 6
+  log_monitoring_enabled = false
+  count                  = var.enable_security ? 1 : 0
+}
+
+# Note: Terraform azurerm provider v3+ handles data masking via direct T-SQL or specifics
+# For simplicity and robustness in this demo, we will use a null_resource to apply masking via SQLCMD 
+# if the native resource is tricky or deprecated. 
+# ACTUALLY, azurerm_mssql_database_data_masking_policy is available but often deprecated/complex. 
+# Best approach for this demo: PROPOSE MANUAL CLICK or SQL SCRIPT. 
+# But wait, I can add a dedicated SQL script runner for security!
+
+resource "null_resource" "apply_masking" {
+  count = var.enable_security ? 1 : 0
+  triggers = {
+    security_enabled = var.enable_security
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      sqlcmd -S ${azurerm_mssql_server.sql_server.fully_qualified_domain_name} \
+             -U ${var.sql_admin_login} \
+             -P '${var.sql_admin_password}' \
+             -d ${azurerm_mssql_database.dwh.name} \
+             -Q "ALTER TABLE dim_customer ALTER COLUMN email ADD MASKED WITH (FUNCTION = 'email()'); ALTER TABLE dim_customer ALTER COLUMN address ADD MASKED WITH (FUNCTION = 'default()');"
+    EOT
+  }
+}

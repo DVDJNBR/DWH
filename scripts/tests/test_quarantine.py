@@ -200,60 +200,95 @@ def check_quarantine_storage(container_name, test_marker, max_wait=90):
     return None
 
 
+
+class OutputBuffer:
+    """Buffer to capture stdout and write to file"""
+    def __init__(self, filename):
+        self.filename = filename
+        self.buffer = []
+        self.original_stdout = sys.stdout
+
+    def write(self, text):
+        self.buffer.append(text)
+        self.original_stdout.write(text)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+    def save(self):
+        with open(self.filename, 'w') as f:
+            # Remove color codes
+            text = ''.join(self.buffer)
+            for color in [GREEN, YELLOW, RED, CYAN, NC]:
+                text = text.replace(color, '')
+            f.write(text)
+
+
 def main():
     """Main test function"""
+    report_path = Path(__file__).parent / 'quarantine_report.txt'
+    output_buffer = OutputBuffer(str(report_path))
+    sys.stdout = output_buffer
+    
     print(f"\n{CYAN}{'='*60}{NC}")
     print(f"{CYAN}Test: Data Quality Quarantine{NC}")
     print(f"{CYAN}{'='*60}{NC}\n")
 
-    # Check if quarantine is enabled
-    storage_account = get_terraform_output("quarantine_storage_account_name")
-    if not storage_account:
-        print(f"{RED}✗ Quarantine not enabled{NC}")
-        print(f"{YELLOW}💡 Deploy with enable_quarantine=true{NC}")
-        sys.exit(1)
+    try:
+        # Check if quarantine is enabled
+        storage_account = get_terraform_output("quarantine_storage_account_name")
+        if not storage_account:
+            print(f"{RED}✗ Quarantine not enabled{NC}")
+            print(f"{YELLOW}💡 Deploy with enable_quarantine=true{NC}")
+            sys.exit(1)
 
-    print(f"{GREEN}✓ Quarantine storage: {storage_account}{NC}\n")
+        print(f"{GREEN}✓ Quarantine storage: {storage_account}{NC}\n")
 
-    tests_passed = 0
-    tests_failed = 0
+        tests_passed = 0
+        tests_failed = 0
 
-    # Test 1: Invalid order
-    print(f"\n{CYAN}--- Test 1: Invalid Order (null order_id) ---{NC}")
-    invalid_order = send_invalid_order()
-    container_orders = get_terraform_output("quarantine_container_orders")
+        # Test 1: Invalid order
+        print(f"\n{CYAN}--- Test 1: Invalid Order (null order_id) ---{NC}")
+        invalid_order = send_invalid_order()
+        container_orders = get_terraform_output("quarantine_container_orders")
 
-    result = check_quarantine_storage(container_orders, invalid_order['test_marker'])
-    if result:
-        tests_passed += 1
-        print(f"{GREEN}✓ Invalid order correctly quarantined{NC}")
-    else:
-        tests_failed += 1
-        print(f"{RED}✗ Invalid order not found in quarantine{NC}")
+        result = check_quarantine_storage(container_orders, invalid_order['test_marker'])
+        if result:
+            tests_passed += 1
+            print(f"{GREEN}✓ Invalid order correctly quarantined{NC}")
+        else:
+            tests_failed += 1
+            print(f"{RED}✗ Invalid order not found in quarantine{NC}")
 
-    # Test 2: Invalid clickstream
-    print(f"\n{CYAN}--- Test 2: Invalid Clickstream (null session_id) ---{NC}")
-    invalid_click = send_invalid_clickstream()
-    container_click = get_terraform_output("quarantine_container_clickstream")
+        # Test 2: Invalid clickstream
+        print(f"\n{CYAN}--- Test 2: Invalid Clickstream (null session_id) ---{NC}")
+        invalid_click = send_invalid_clickstream()
+        container_click = get_terraform_output("quarantine_container_clickstream")
 
-    result = check_quarantine_storage(container_click, invalid_click['test_marker'])
-    if result:
-        tests_passed += 1
-        print(f"{GREEN}✓ Invalid clickstream correctly quarantined{NC}")
-    else:
-        tests_failed += 1
-        print(f"{RED}✗ Invalid clickstream not found in quarantine{NC}")
+        result = check_quarantine_storage(container_click, invalid_click['test_marker'])
+        if result:
+            tests_passed += 1
+            print(f"{GREEN}✓ Invalid clickstream correctly quarantined{NC}")
+        else:
+            tests_failed += 1
+            print(f"{RED}✗ Invalid clickstream not found in quarantine{NC}")
 
-    # Summary
-    print(f"\n{CYAN}{'='*60}{NC}")
-    if tests_failed == 0:
-        print(f"{GREEN}✓ All {tests_passed} tests passed!{NC}")
-        print(f"{GREEN}{'='*60}{NC}\n")
-    else:
-        print(f"{RED}✗ {tests_failed} test(s) failed, {tests_passed} passed{NC}")
-        print(f"{RED}{'='*60}{NC}\n")
-        sys.exit(1)
+        # Summary
+        print(f"\n{CYAN}{'='*60}{NC}")
+        if tests_failed == 0:
+            print(f"{GREEN}✓ All {tests_passed} tests passed!{NC}")
+            print(f"{GREEN}{'='*60}{NC}")
+            print(f"\n📄 Report saved: {report_path}\n")
+        else:
+            print(f"{RED}✗ {tests_failed} test(s) failed, {tests_passed} passed{NC}")
+            print(f"{RED}{'='*60}{NC}\n")
+            sys.exit(1)
+
+    finally:
+        output_buffer.save()
+        sys.stdout = output_buffer.original_stdout
 
 
 if __name__ == "__main__":
     main()
+
