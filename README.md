@@ -565,7 +565,33 @@ https://portal.azure.com/#@/dashboard/arm/.../dwh-main-dashboard
 
 ---
 
-## 📊 Data Management
+## 🔒 Phase 10: Security & GDPR Compliance
+
+Enable advanced security features to meet GDPR requirements (Competency E6).
+
+```bash
+make enable-security
+```
+
+**What gets added:**
+
+**Dynamic Data Masking (DDM):**
+
+- Masks sensitive PII (Personally Identifiable Information) in `dim_customer` and `dim_vendor`.
+- Fields masked: `email`, `address`, `phone`.
+- Unprivileged users see `xxxxx@xxxxx.com` instead of real data.
+
+**SQL Auditing:**
+
+- Tracks all database access and queries.
+- Logs stored in Azure Storage Account for compliance traceabilty.
+
+**Verification:**
+
+- Automated: `scripts/tests/test_base_schema.py` checks masking policies.
+- Manual: View Audit Logs in Azure Portal.
+
+---
 
 ### Generate Historical Data
 
@@ -625,6 +651,7 @@ ORDER BY revenue DESC;
 ├── scripts/                     # Utility scripts
 │   ├── seed_historical_data.py
 │   ├── seed_vendors.py
+│   ├── trigger_alert.py         # Utility to force-trigger alerts
 │   ├── migrations/              # SQL migrations
 │   │   ├── 001_add_marketplace_tables.sql
 │   │   └── 002_implement_scd2_vendor.sql
@@ -683,6 +710,7 @@ az monitor activity-log list \
 - **Vendor SCD2 Verification**: `make test-scd2-vendor` (SCD Type 2 validation for vendors)
 - **Product SCD2 Verification**: `make test-scd2-product` (SCD Type 2 validation for products)
 - **Monitoring Verification**: `make test-monitoring` (Validates Action Groups, Alerts, Dashboard)
+- **Security Verification**: `make enable-security` (Validates Data Masking & Auditing - C16/GDPR)
 
 ## 👤 Author
 
