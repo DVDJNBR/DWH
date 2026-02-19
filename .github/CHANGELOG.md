@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/DVDJNBR/DWH/compare/v2.1.0...v2.2.0) (2026-02-19)
+
+
+### Features
+
+* Finalize E6 deliverables (GDPR, Reporting, Terraform Fixes) ([31c39d2](https://github.com/DVDJNBR/DWH/commit/31c39d267584b968923c9121e22043c910fb2ae6))
+
 # [2.1.0](https://github.com/DVDJNBR/DWH/compare/v2.0.5...v2.1.0) (2026-02-16)
 
 
