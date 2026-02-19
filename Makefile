@@ -150,6 +150,15 @@ enable-monitoring: ## [9] Enable monitoring dashboard and alerts
 	@echo "$(GREEN)✅ Monitoring enabled and stream restarted!$(NC)"
 	@echo "$(CYAN)📊 Dashboard: https://portal.azure.com/#@/dashboard/arm/subscriptions/.../resourceGroups/$(RESOURCE_GROUP)/providers/Microsoft.Portal/dashboards/dwh-main-dashboard$(NC)"
 
+enable-security: ## [10] Enable security features (GDPR/DDM + Auditing)
+	@echo "$(CYAN)🔒 Enabling Security & GDPR features...$(NC)"
+	@echo "$(YELLOW)⚠️  This applies Dynamic Data Masking & SQL Auditing$(NC)"
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="enable_marketplace=true" \
+		-var="enable_quarantine=true" \
+		-var="enable_monitoring=true" \
+		-var="enable_security=true"
+
 deploy-alerts-test: ## [9] Disable quarantine zone to test alerts
 	@echo "$(YELLOW)⚠️  Disabling quarantine zone for alert testing...$(NC)"
 	@echo "$(YELLOW)⏸️  Stopping Stream Analytics job...$(NC)"

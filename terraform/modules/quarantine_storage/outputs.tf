@@ -34,3 +34,8 @@ output "container_vendors_name" {
   description = "Name of the quarantine vendors container"
   value       = azurerm_storage_container.quarantine_vendors.name
 }
+
+output "storage_account_endpoint" {
+  description = "Primary blob endpoint for the storage account"
+  value       = azurerm_storage_account.quarantine.primary_blob_endpoint
+}

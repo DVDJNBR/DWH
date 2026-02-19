@@ -265,35 +265,69 @@ def cleanup_test_vendor(vendor_id):
 
     print(f"{GREEN}✓ Cleanup complete{NC}")
 
+
+class OutputBuffer:
+    """Buffer to capture stdout and write to file"""
+    def __init__(self, filename):
+        self.filename = filename
+        self.buffer = []
+        self.original_stdout = sys.stdout
+
+    def write(self, text):
+        self.buffer.append(text)
+        self.original_stdout.write(text)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+    def save(self):
+        with open(self.filename, 'w') as f:
+            # Remove color codes
+            text = ''.join(self.buffer)
+            for color in [GREEN, YELLOW, RED, CYAN, NC]:
+                text = text.replace(color, '')
+            f.write(text)
+
 def main():
     """Main test function"""
+    report_path = Path(__file__).parent / 'scd2_vendor_report.txt'
+    output_buffer = OutputBuffer(str(report_path))
+    sys.stdout = output_buffer
+
     print(f"\n{CYAN}{'='*60}{NC}")
     print(f"{CYAN}SCD Type 2 Implementation Test Suite{NC}")
     print(f"{CYAN}{'='*60}{NC}\n")
 
-    # Test 1: Insert
-    success1, vendor_id = test_new_vendor_insert()
-    if not success1:
+    try:
+        # Test 1: Insert
+        success1, vendor_id = test_new_vendor_insert()
+        if not success1:
+            cleanup_test_vendor(vendor_id)
+            sys.exit(1)
+
+        # Test 2: Update (SCD Type 2)
+        success2 = test_vendor_update(vendor_id)
+
+        # Cleanup
         cleanup_test_vendor(vendor_id)
-        sys.exit(1)
 
-    # Test 2: Update (SCD Type 2)
-    success2 = test_vendor_update(vendor_id)
+        # Final result
+        if success1 and success2:
+            print(f"\n{GREEN}{'='*60}{NC}")
+            print(f"{GREEN}✓ All SCD Type 2 tests passed!{NC}")
+            print(f"{GREEN}{'='*60}{NC}")
+            print(f"\n📄 Report saved: {report_path}\n")
+            return 0
+        else:
+            print(f"\n{RED}{'='*60}{NC}")
+            print(f"{RED}✗ Some tests failed{NC}")
+            print(f"{RED}{'='*60}{NC}\n")
+            return 1
 
-    # Cleanup
-    cleanup_test_vendor(vendor_id)
-
-    # Final result
-    if success1 and success2:
-        print(f"\n{GREEN}{'='*60}{NC}")
-        print(f"{GREEN}✓ All SCD Type 2 tests passed!{NC}")
-        print(f"{GREEN}{'='*60}{NC}\n")
-        return 0
-    else:
-        print(f"\n{RED}{'='*60}{NC}")
-        print(f"{RED}✗ Some tests failed{NC}")
-        print(f"{RED}{'='*60}{NC}\n")
-        return 1
+    finally:
+        output_buffer.save()
+        sys.stdout = output_buffer.original_stdout
 
 if __name__ == "__main__":
     sys.exit(main())
+

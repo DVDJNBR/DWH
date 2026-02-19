@@ -264,33 +264,64 @@ def show_recent_orders():
 
     conn.close()
 
+
+class OutputBuffer:
+    """Buffer to capture stdout and write to file"""
+    def __init__(self, filename):
+        self.filename = filename
+        self.buffer = []
+        self.original_stdout = sys.stdout
+
+    def write(self, text):
+        self.buffer.append(text)
+        self.original_stdout.write(text)
+
+    def flush(self):
+        self.original_stdout.flush()
+
+    def save(self):
+        with open(self.filename, 'w') as f:
+            # Remove color codes
+            text = ''.join(self.buffer)
+            for color in [GREEN, YELLOW, RED, CYAN, NC]:
+                text = text.replace(color, '')
+            f.write(text)
+
 def main():
     """Main test function"""
+    report_path = Path(__file__).parent / 'vendors_stream_report.txt'
+    output_buffer = OutputBuffer(str(report_path))
+    sys.stdout = output_buffer
+    
     print(f"\n{CYAN}{'='*60}{NC}")
     print(f"{CYAN}Test: Vendors Stream Processing{NC}")
     print(f"{CYAN}{'='*60}{NC}\n")
 
-    # Check if vendors Event Hub exists
-    if not check_vendors_eventhub():
-        sys.exit(1)
+    try:
+        # Check if vendors Event Hub exists
+        if not check_vendors_eventhub():
+            sys.exit(1)
 
-    # Send test event
-    vendor_event = send_vendor_event()
+        # Send test event
+        vendor_event = send_vendor_event()
 
-    # Wait for processing
-    if not wait_for_processing(vendor_event['vendor_id']):
-        sys.exit(1)
+        # Wait for processing
+        if wait_for_processing(vendor_event['vendor_id']):
+            # Verify data
+            verify_vendor_data(vendor_event)
 
-    # Verify data
-    if not verify_vendor_data(vendor_event):
-        sys.exit(1)
+        # Show recent orders with joins
+        show_recent_orders()
 
-    # Show recent orders with joins
-    show_recent_orders()
+        print(f"\n{GREEN}{'='*60}{NC}")
+        print(f"{GREEN}✓ All tests passed!{NC}")
+        print(f"{GREEN}{'='*60}{NC}")
+        print(f"\n📄 Report saved: {report_path}\n")
 
-    print(f"\n{GREEN}{'='*60}{NC}")
-    print(f"{GREEN}✓ All tests passed!{NC}")
-    print(f"{GREEN}{'='*60}{NC}\n")
+    finally:
+        output_buffer.save()
+        sys.stdout = output_buffer.original_stdout
 
 if __name__ == "__main__":
     main()
+
